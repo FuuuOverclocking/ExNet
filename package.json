@@ -1,0 +1,80 @@
+{
+    "name": "exnet",
+    "version": "0.0.2",
+    "description": "exnet",
+    "main": "./exnet.js",
+    "module": "./prod-esm/exnet.js",
+    "unpkg": "./umd/exnet.dev.comps.umd.js",
+    "jsdelivr": "./umd/exnet.dev.comps.umd.js",
+    "types": "./exnet.d.ts",
+    "sideEffects": false,
+    "scripts": {
+        "help": "node scripts/print-help.js",
+        "build": "node scripts/build.js",
+        "make-package": "node scripts/build.js --make-package",
+        "test": "jest",
+        "lint": "echo 'Not yet supported'",
+        "release": "node scripts/release.js",
+        "cz": "git-cz",
+        "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s -r 0"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/xyzingh/ExNet.git"
+    },
+    "keywords": [],
+    "author": "X.Y.Z.",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/xyzingh/ExNet/issues"
+    },
+    "homepage": "https://exnet.justlog.xyz/",
+    "config": {
+        "commitizen": {
+            "path": "./node_modules/cz-conventional-changelog"
+        }
+    },
+    "dependencies": {
+        "tslib": "^2.0.3"
+    },
+    "files": [
+        "src",
+        "umd",
+        "exnet.js",
+        "exnet.d.ts",
+        "exnet.js.map",
+        "exnet.dev.cjs.js",
+        "exnet.dev.cjs.d.ts",
+        "exnet.dev.cjs.js.map",
+        "exnet.prod.cjs.js",
+        "exnet.prod.cjs.d.ts",
+        "exnet.prod.cjs.js.map",
+        "attrs",
+        "connectors",
+        "nodes",
+        "dev-esm",
+        "prod-esm"
+    ],
+    "devDependencies": {
+        "@types/fs-extra": "^9.0.4",
+        "@types/jest": "^26.0.15",
+        "@types/node": "^14.14.9",
+        "@typescript-eslint/eslint-plugin": "^4.8.1",
+        "@typescript-eslint/parser": "^4.8.1",
+        "chalk": "^4.1.0",
+        "commitizen": "^4.2.2",
+        "conventional-changelog-cli": "^2.1.1",
+        "cz-conventional-changelog": "^3.3.0",
+        "eslint": "^7.14.0",
+        "eslint-config-prettier": "^6.15.0",
+        "eslint-plugin-jest": "^24.1.3",
+        "fs-extra": "^9.0.1",
+        "jest": "^26.6.3",
+        "prettier": "^2.2.0",
+        "rollup": "^2.33.3",
+        "terser": "^5.5.0",
+        "ts-jest": "^26.4.4",
+        "ts-node": "^9.0.0",
+        "typescript": "^4.1.2"
+    }
+}
