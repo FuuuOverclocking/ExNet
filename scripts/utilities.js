@@ -1,9 +1,8 @@
+const fs = require('fs-extra');
 const path = require('path');
 const readline = require('readline');
 const chalk = require('chalk');
 const child_process = require('child_process');
-const { Transform } = require('stream');
-const StringDecoder = require('string_decoder').StringDecoder;
 
 function echo(...args) {
     console.log(...args);
@@ -18,6 +17,13 @@ const paths = {
     scriptsDir: path.resolve(__dirname),
 };
 exports.paths = paths;
+
+exports.cliArgs = process.argv.slice(2);
+
+function getExNetVersion() {
+    return fs.readJSONSync(paths.get('./package.json')).version;
+}
+exports.getExNetVersion = getExNetVersion;
 
 function ask(message) {
     const rl = readline.createInterface({
@@ -69,62 +75,16 @@ async function askYesOrNo(message, defaultAnswer) {
 }
 exports.askYesOrNo = askYesOrNo;
 
-function addIndentToStringStream(width = 4) {
-    const decoder = new StringDecoder('utf8');
-    let hasPutFirstIndent = false;
-
-    let indent = '';
-    const space = ' ';
-    for (let i = 0; i < width; ++i) {
-        indent += space;
-    }
-
-    const t = new Transform({
-        transform(chunk, encoding, callback) {
-            if (encoding === 'buffer') {
-                chunk = decoder.write(chunk);
-            }
-            if (!hasPutFirstIndent) {
-                hasPutFirstIndent = true;
-                chunk = indent + chunk;
-            }
-            chunk = chunk.replace(/\r\n/g, '\r\n' + indent);
-            chunk = chunk.replace(/\r(?!\n)/g, '\r' + indent);
-            chunk = chunk.replace(/(?<!\r)\n/g, '\n' + indent);
-            this.push(chunk);
-            callback();
-        },
-    });
-    t.setDefaultEncoding('utf-8');
-    t.setEncoding('utf8');
-    return t;
-}
-
 function exec(command, indent = 0) {
     return new Promise((resolve, reject) => {
         const timeBegin = Date.now();
         const proc = child_process.spawn(command, {
             cwd: paths.projectRoot,
             shell: true,
+            stdio: 'inherit',
         });
 
-        const stdout = indent
-            ? proc.stdout.pipe(addIndentToStringStream(indent))
-            : proc.stdout;
-        const stderr = indent
-            ? proc.stderr.pipe(addIndentToStringStream(indent))
-            : proc.stderr;
-
-        process.stdin.pipe(proc.stdin);
-        stdout.pipe(process.stdout);
-        stderr.pipe(process.stderr);
-
         proc.on('exit', (code) => {
-            process.stdin.unpipe(proc.stdin);
-            stdout.unpipe(process.stdout);
-            stderr.unpipe(process.stderr);
-
-            process.stdout.write('\r');
             const result = {
                 code,
                 time: Date.now() - timeBegin,

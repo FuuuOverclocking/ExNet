@@ -4,32 +4,33 @@ const {
     echo,
     exec,
     paths,
+    getExNetVersion,
     isGitClean,
     currentGitBranch,
 } = require('./utilities');
 const chalk = require('chalk');
-const { red, blue, cyan } = chalk;
+const { red, cyan } = chalk;
 const fs = require('fs-extra');
 
 process.on('unhandledRejection', (reason) => {
-    console.log();
-    console.log('Unhandled rejection:');
-    console.log(reason);
+    echo();
+    echo('Unhandled rejection:');
+    echo(reason);
+    process.exit(1);
 });
 
 main();
 async function main() {
     if ((await currentGitBranch()) !== 'main') {
         echo(red('Switch to "main" branch before you start releasing.'));
-        // return;
+        return;
     }
     if (!(await isGitClean())) {
         echo(red('Commit all the changes before you start releasing.'));
-        // return;
+        return;
     }
 
-    const packageJson = fs.readJSONSync(paths.get('./package.json'));
-    echo('Current version: v' + packageJson.version);
+    echo('Current version: v' + getExNetVersion());
 
     const version = await askAndCheck('Enter new version: v', (ver) =>
         /^\d+\.\d+\.\d+$/.test(ver),
@@ -43,47 +44,48 @@ async function main() {
         return;
     }
 
-    echo(`Releasing v${version} ...`);
+    echo(`Releasing v${version} ...\n`);
 
     function echoAndExec(command) {
-        echo('      ' + chalk.bgYellowBright.black('$ ' + command));
-        return exec(command, 6);
+        echo(chalk.bgYellowBright.black('$ ' + command));
+        return exec(command);
     }
+    const bb = chalk.bgBlueBright.black;
 
-    echo(blue('[1/9] Linting...'));
+    echo(bb('[1/9] Linting...'));
     await echoAndExec('yarn lint');
 
-    echo(blue('[2/9] Building...'));
+    echo(bb('[2/9] Building...'));
     await echoAndExec('node ./scripts/build.js');
 
-    echo(blue('[3/9] Testing...'));
+    echo(bb('[3/9] Testing...'));
     await echoAndExec('yarn jest');
 
-    echo(blue('[4/9] Bump version in package.json'));
+    echo(bb('[4/9] Bump version in package.json'));
     bumpVersionInPackageJson(version);
 
-    echo(blue('[5/9] Making package...'));
-    await echoAndExec('node ./scripts/build.js --make-package');
-
-    echo(blue('[6/9] Making CHANGELOG.md ...'));
+    echo(bb('[5/9] Updating CHANGELOG.md ...'));
     await echoAndExec('yarn changelog');
 
-    echo(blue('[7/9] git add, commit, tag'));
+    echo(bb('[6/9] Making package...'));
+    await echoAndExec('node ./scripts/build.js --make-package');
+
+    echo(bb('[7/9] git add, commit, tag'));
     await echoAndExec('git add -A'); // should add package.json, CHANGELOG.md
     await echoAndExec('git add -f release');
     await echoAndExec(`git commit -m "build: release v${version}"`);
     await echoAndExec(`git tag v${version}`);
 
-    echo(blue('[8/9] Syncing with GitHub...'));
+    echo(bb('[8/9] Syncing with GitHub...'));
     await echoAndExec('git push');
     await echoAndExec('git push --tags');
 
-    echo(blue('[9/9] Publishing to NPM...'));
+    echo(bb('[9/9] Publishing to NPM...'));
     const npmRegistry =
         ' --metrics-registry "https://registry.npmjs.org/"' +
         ' --registry "https://registry.npmjs.org/"';
     const hasLoggedIn = await askYesOrNo(
-        cyan('      Have you logged in to NPM?'),
+        cyan('Have you logged in to NPM?'),
         'y',
     );
     if (!hasLoggedIn) {

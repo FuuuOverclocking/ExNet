@@ -37,6 +37,29 @@
     "dependencies": {
         "tslib": "^2.0.3"
     },
+    "devDependencies": {
+        "@types/fs-extra": "^9.0.4",
+        "@types/jest": "^26.0.15",
+        "@types/node": "^14.14.9",
+        "@typescript-eslint/eslint-plugin": "^4.8.1",
+        "@typescript-eslint/parser": "^4.8.1",
+        "chalk": "^4.1.0",
+        "commitizen": "^4.2.2",
+        "conventional-changelog-cli": "^2.1.1",
+        "cz-conventional-changelog": "^3.3.0",
+        "draftlog": "^1.0.12",
+        "eslint": "^7.14.0",
+        "eslint-config-prettier": "^6.15.0",
+        "eslint-plugin-jest": "^24.1.3",
+        "fs-extra": "^9.0.1",
+        "jest": "^26.6.3",
+        "prettier": "^2.2.0",
+        "rollup": "^2.33.3",
+        "terser": "^5.5.0",
+        "ts-jest": "^26.4.4",
+        "ts-node": "^9.0.0",
+        "typescript": "^4.1.2"
+    },
     "files": [
         "src",
         "umd",
@@ -53,28 +76,7 @@
         "connectors",
         "nodes",
         "dev-esm",
-        "prod-esm"
-    ],
-    "devDependencies": {
-        "@types/fs-extra": "^9.0.4",
-        "@types/jest": "^26.0.15",
-        "@types/node": "^14.14.9",
-        "@typescript-eslint/eslint-plugin": "^4.8.1",
-        "@typescript-eslint/parser": "^4.8.1",
-        "chalk": "^4.1.0",
-        "commitizen": "^4.2.2",
-        "conventional-changelog-cli": "^2.1.1",
-        "cz-conventional-changelog": "^3.3.0",
-        "eslint": "^7.14.0",
-        "eslint-config-prettier": "^6.15.0",
-        "eslint-plugin-jest": "^24.1.3",
-        "fs-extra": "^9.0.1",
-        "jest": "^26.6.3",
-        "prettier": "^2.2.0",
-        "rollup": "^2.33.3",
-        "terser": "^5.5.0",
-        "ts-jest": "^26.4.4",
-        "ts-node": "^9.0.0",
-        "typescript": "^4.1.2"
-    }
+        "prod-esm",
+        "CHANGELOG.md"
+    ]
 }
