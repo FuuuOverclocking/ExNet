@@ -9,4 +9,4 @@ coverage
 node_modules/
 
 # TypeScript config
-tsconfig.base.json
+tsconfig.*.json

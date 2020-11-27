@@ -9,7 +9,7 @@ const {
     currentGitBranch,
 } = require('./utilities');
 const chalk = require('chalk');
-const { red, cyan } = chalk;
+const { red, cyan, black, bold } = chalk;
 const fs = require('fs-extra');
 
 process.on('unhandledRejection', (reason) => {
@@ -22,8 +22,7 @@ process.on('unhandledRejection', (reason) => {
 main();
 async function main() {
     if ((await currentGitBranch()) !== 'main') {
-        echo(red('Switch to "main" branch before you start releasing.'));
-        return;
+        echo(red('⚠ You\'re not on "main" branch.'));
     }
     if (!(await isGitClean())) {
         echo(red('Commit all the changes before you start releasing.'));
@@ -36,7 +35,7 @@ async function main() {
         /^\d+\.\d+\.\d+$/.test(ver),
     );
     const sure = await askYesOrNo(
-        `Releasing v${chalk.bgWhite.black(version)} - are you sure?`,
+        `Releasing v${black.bgWhite(version)} - are you sure?`,
         'n',
     );
     if (!sure) {
@@ -47,19 +46,19 @@ async function main() {
     echo(`Releasing v${version} ...\n`);
 
     function echoAndExec(command) {
-        echo(chalk.bgYellowBright.black('$ ' + command));
+        echo(black.bgYellowBright('$ ' + command));
         return exec(command);
     }
-    const bb = chalk.bgBlueBright.black;
+    const bb = black.bgBlueBright;
 
     echo(bb('[1/9] Linting...'));
     await echoAndExec('yarn lint');
 
     echo(bb('[2/9] Building...'));
-    await echoAndExec('node ./scripts/build.js');
+    await echoAndExec('yarn build');
 
     echo(bb('[3/9] Testing...'));
-    await echoAndExec('yarn jest');
+    await echoAndExec('yarn test');
 
     echo(bb('[4/9] Bump version in package.json'));
     bumpVersionInPackageJson(version);
@@ -68,7 +67,7 @@ async function main() {
     await echoAndExec('yarn changelog');
 
     echo(bb('[6/9] Making package...'));
-    await echoAndExec('node ./scripts/build.js --make-package');
+    await echoAndExec('yarn make-package');
 
     echo(bb('[7/9] git add, commit, tag'));
     await echoAndExec('git add -A'); // should add package.json, CHANGELOG.md
@@ -92,7 +91,7 @@ async function main() {
         echo(chalk.bgYellowBright.black('$ npm login'));
         await exec('npm login' + npmRegistry);
     }
-    await echoAndExec('npm publish' + npmRegistry);
+    await echoAndExec('npm publish ./release' + npmRegistry);
 
     echo('done');
 }

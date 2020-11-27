@@ -3,6 +3,7 @@ const path = require('path');
 const readline = require('readline');
 const chalk = require('chalk');
 const child_process = require('child_process');
+const stripAnsi = require('strip-ansi');
 
 function echo(...args) {
     console.log(...args);
@@ -24,6 +25,17 @@ function getExNetVersion() {
     return fs.readJSONSync(paths.get('./package.json')).version;
 }
 exports.getExNetVersion = getExNetVersion;
+
+function getPromise() {
+    let resolve;
+    let reject;
+    const promise = new Promise((res, rej) => {
+        resolve = res;
+        reject = rej;
+    });
+    return { promise, resolve, reject };
+}
+exports.getPromise = getPromise;
 
 function ask(message) {
     const rl = readline.createInterface({
@@ -75,7 +87,7 @@ async function askYesOrNo(message, defaultAnswer) {
 }
 exports.askYesOrNo = askYesOrNo;
 
-function exec(command, indent = 0) {
+function exec(command) {
     return new Promise((resolve, reject) => {
         const timeBegin = Date.now();
         const proc = child_process.spawn(command, {
@@ -99,30 +111,60 @@ function exec(command, indent = 0) {
 }
 exports.exec = exec;
 
-function execSilently(command) {
-    return new Promise((resolve, reject) => {
-        const timeBegin = Date.now();
-        child_process.exec(
-            command,
-            {
-                cwd: paths.projectRoot,
-                shell: true,
-            },
-            (err, stdout, stderr) => {
-                const result = {
-                    code: err ? err.code : 0,
-                    time: Date.now() - timeBegin,
-                    stderr,
-                    stdout,
-                };
-                if (result.code !== 0) {
-                    reject(result);
-                } else {
-                    resolve(result);
-                }
-            },
-        );
-    });
+function execSilently(command, saveOutputAs) {
+    const timeBegin = Date.now();
+    const { promise, resolve, reject } = getPromise();
+
+    function callback(err, stdout, stderr) {
+        const result = {
+            code: err ? err.code : 0,
+            time: Date.now() - timeBegin,
+            stderr,
+            stdout,
+        };
+        if (typeof saveOutputAs === 'string') {
+            const hasStdout =
+                typeof stdout === 'string' ? !!stdout.trim() : !!stdout;
+            const hasStderr =
+                typeof stderr === 'string' ? !!stderr.trim() : !!stderr;
+            const logs = [];
+            if (hasStdout) {
+                const filename = hasStderr
+                    ? saveOutputAs + '.stdout.log'
+                    : saveOutputAs + '.log';
+                fs.outputFileSync(filename, stripAnsi(stdout), {
+                    encoding: 'utf8',
+                });
+                logs.push(filename);
+            }
+            if (hasStderr) {
+                fs.outputFileSync(
+                    saveOutputAs + '.stderr.log',
+                    stripAnsi(stderr),
+                    {
+                        encoding: 'utf8',
+                    },
+                );
+                logs.push(saveOutputAs + '.stderr.log');
+            }
+            result.logs = logs;
+        }
+        if (result.code !== 0) {
+            reject(result);
+        } else {
+            resolve(result);
+        }
+    }
+
+    child_process.exec(
+        command,
+        {
+            cwd: paths.projectRoot,
+            shell: true,
+        },
+        callback,
+    );
+    return promise;
 }
 exports.execSilently = execSilently;
 

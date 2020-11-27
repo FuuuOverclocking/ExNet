@@ -1,9 +1,5 @@
-import monitor from './monitor';
-import { configure, setMonitor } from './core/config';
+import { monitor } from './monitor';
+export * from './core/api';
+import { setMonitor } from './core/local-domain';
 
 setMonitor(monitor);
-configure({
-    logLevel: 'info',
-});
-
-export * from './core';

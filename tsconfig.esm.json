@@ -1,0 +1,25 @@
+{
+    "extends": "./tsconfig.base.json",
+    "compilerOptions": {
+        /* Visit https://aka.ms/tsconfig.json to read more about this file */
+
+        /* Basic Options */
+        "module": "ES2015",                       /* Specify module code generation: 'none', 'commonjs', 'amd', 'system', 'umd', 'es2015', 'es2020', or 'ESNext'. */
+        "lib": [
+            "ES2015",
+            "ES2017.TypedArrays",
+            "ES2020.BigInt"
+        ],                                        /* Specify library files to be included in the compilation. */
+        "declaration": true,                      /* Generates corresponding '.d.ts' file. */
+        "sourceMap": true,                        /* Generates corresponding '.map' file. */
+        "outDir": "./build/tsesm",                /* Redirect output structure to the directory. */
+        "importHelpers": true,                    /* Import emit helpers from 'tslib'. */
+
+        /* Source Map Options */
+        // "sourceRoot": "../src",                /* Specify the location where debugger should locate TypeScript files instead of source locations. */
+        "inlineSources": true,                    /* Emit the source alongside the sourcemaps within a single file; requires '--inlineSourceMap' or '--sourceMap' to be set. */
+    },
+    "include": [
+        "./src/**/*"
+    ],
+}

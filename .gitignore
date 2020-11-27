@@ -2,6 +2,7 @@
 build/
 release/
 tmp/
+logs/
 
 # Editor Configuration
 .vscode/

@@ -1,8 +1,4 @@
-import { configure, setMonitor } from './core/config';
+export * from './core/api';
+import { setMonitor } from './core/local-domain';
 
-setMonitor(null);
-configure({
-    logLevel: 'warn',
-});
-
-export * from './core';
+setMonitor(void 0);
