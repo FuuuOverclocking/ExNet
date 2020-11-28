@@ -8,7 +8,8 @@ const banner = (() => {
     const year = new Date().getFullYear();
     return (
         `/**\n` +
-        ` * @license ExNet v${version}\n` +
+        ` * @license\n` +
+        ` * ExNet v${version}\n` +
         ` * (c) 2018-${year} X.Y.Z.\n` +
         ` * Released under the MIT License.\n` +
         ` */\n`

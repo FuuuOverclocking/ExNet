@@ -242,7 +242,24 @@ build.tasks = (() => {
             }
         },
         async copyAutoCJS() {
-            await fs.copy('./src/exnet.auto.cjs.js', './build/cjs/exnet.js');
+            const content = await fs.readFile(
+                './src/exnet.auto.cjs.js',
+                'utf8',
+            );
+
+            const banner = (() => {
+                const version = require('../package.json').version;
+                const year = new Date().getFullYear();
+                return (
+                    `/**\n` +
+                    ` * @license\n` +
+                    ` * ExNet v${version}\n` +
+                    ` * (c) 2018-${year} X.Y.Z.\n` +
+                    ` * Released under the MIT License.\n` +
+                    ` */\n\n`
+                );
+            })();
+            await fs.outputFile('./build/cjs/exnet.js', banner + content);
             echo('❯ ✔️ Copy exnet.auto.cjs.js to cjs/.');
             build.onTaskFinish();
         },
