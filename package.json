@@ -14,7 +14,7 @@
         "build": "node scripts/build.js",
         "make-package": "node scripts/build.js --make-package",
         "test": "echo 'Not yet supported'",
-        "lint": "echo 'Not yet supported'",
+        "lint": "eslint -c ./.eslintrc.js .",
         "release": "node scripts/release.js",
         "cz": "git-cz",
         "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s -r 0"

@@ -9,7 +9,7 @@ const {
     currentGitBranch,
 } = require('./utilities');
 const chalk = require('chalk');
-const { red, cyan, black, bold } = chalk;
+const { red, cyan, black } = chalk;
 const fs = require('fs-extra');
 
 process.on('unhandledRejection', (reason) => {

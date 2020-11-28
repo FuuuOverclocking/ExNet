@@ -1,7 +1,7 @@
 import type { ABC } from './types';
 import { a, monitor } from './local-domain';
 
-export const something = () => {
+export const something = (): ABC => {
     console.log(123);
     console.log(123);
     console.log(123);

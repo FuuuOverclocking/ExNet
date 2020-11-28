@@ -53,6 +53,7 @@ function ask(message) {
 exports.ask = ask;
 
 async function askAndCheck(message, check) {
+    // eslint-disable-next-line no-constant-condition
     while (true) {
         let answer = await ask(message);
         if (check(answer)) return answer;
@@ -74,6 +75,7 @@ async function askYesOrNo(message, defaultAnswer) {
             : ' [y/N] ';
     message += postfix;
 
+    // eslint-disable-next-line no-constant-condition
     while (true) {
         let answer = await ask(message);
         answer = answer.replace(/\s/g, '').toLowerCase();
