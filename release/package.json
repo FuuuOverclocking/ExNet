@@ -1,6 +1,6 @@
 {
     "name": "exnet",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "description": "exnet",
     "main": "./exnet.js",
     "module": "./prod-esm/exnet.js",
@@ -68,24 +68,5 @@
         "ts-jest": "^26.4.4",
         "ts-node": "^9.0.0",
         "typescript": "^4.1.2"
-    },
-    "files": [
-        "src",
-        "umd",
-        "exnet.js",
-        "exnet.d.ts",
-        "exnet.js.map",
-        "exnet.dev.cjs.js",
-        "exnet.dev.cjs.d.ts",
-        "exnet.dev.cjs.js.map",
-        "exnet.prod.cjs.js",
-        "exnet.prod.cjs.d.ts",
-        "exnet.prod.cjs.js.map",
-        "attrs",
-        "connectors",
-        "nodes",
-        "dev-esm",
-        "prod-esm",
-        "CHANGELOG.md"
-    ]
+    }
 }

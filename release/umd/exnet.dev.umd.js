@@ -1,5 +1,5 @@
 /**
- * @license ExNet v0.0.3
+ * @license ExNet v0.0.4
  * (c) 2018-2020 X.Y.Z.
  * Released under the MIT License.
  */
