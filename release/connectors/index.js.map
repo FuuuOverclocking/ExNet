@@ -1,1 +1,1 @@
-{"version":3,"file":"index.js","sourceRoot":"","sources":["../../../src/connectors/index.ts"],"names":[],"mappings":"AAAA,MAAM,CAAC,MAAM,UAAU,GAAG,EAAE,CAAC;AAC7B,MAAM,CAAC,MAAM,UAAU,GAAG,EAAE,CAAC","sourcesContent":["export const ConnectorA = {};\nexport const ConnectorB = {};\n"]}
+{"version":3,"file":"index.js","sourceRoot":"","sources":["../src/connectors/index.ts"],"names":[],"mappings":"AAAA,MAAM,CAAC,MAAM,UAAU,GAAG,EAAE,CAAC;AAC7B,MAAM,CAAC,MAAM,UAAU,GAAG,EAAE,CAAC","sourcesContent":["export const ConnectorA = {};\nexport const ConnectorB = {};\n"]}

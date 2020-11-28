@@ -1,1 +1,1 @@
-{"version":3,"file":"index.js","sourceRoot":"","sources":["../../../src/attrs/index.ts"],"names":[],"mappings":"AAAA,MAAM,CAAC,MAAM,KAAK,GAAG,EAAE,CAAC;AACxB,MAAM,CAAC,MAAM,KAAK,GAAG,EAAE,CAAC","sourcesContent":["export const AttrA = {};\nexport const AttrB = {};\n"]}
+{"version":3,"file":"index.js","sourceRoot":"","sources":["../../src/attrs/index.ts"],"names":[],"mappings":"AAAA,MAAM,CAAC,MAAM,KAAK,GAAG,EAAE,CAAC;AACxB,MAAM,CAAC,MAAM,KAAK,GAAG,EAAE,CAAC","sourcesContent":["export const AttrA = {};\nexport const AttrB = {};\n"]}

@@ -1,6 +1,6 @@
 {
     "name": "exnet",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "description": "exnet",
     "main": "./exnet.js",
     "module": "./prod-esm/exnet.js",
