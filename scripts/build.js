@@ -112,7 +112,7 @@ build.tasks = (() => {
                 ? ' ' + black.bgYellowBright('output -> ' + logs.join(', '))
                 : '';
             if (code === 0) {
-                draft('❯ ✔️  ' + message + logsPath);
+                draft('❯ ✔️ ' + message + logsPath);
             } else {
                 draft('❯ ❌ ' + message + logsPath);
             }
@@ -139,13 +139,13 @@ build.tasks = (() => {
         async clean() {
             await fs.remove(paths.get('./build'));
             await fs.mkdir(paths.get('./build'));
-            echo('❯ ✔️  Empty the build folder.');
+            echo('❯ ✔️ Empty the build folder.');
             build.onTaskFinish();
         },
         async cleanRelease() {
             await fs.remove(paths.get('./release'));
             await fs.mkdir(paths.get('./release'));
-            echo('❯ ✔️  Empty the release folder.');
+            echo('❯ ✔️ Empty the release folder.');
             build.onTaskFinish();
         },
         tsCJS: produceExternalCommandTask(
@@ -210,14 +210,14 @@ build.tasks = (() => {
                     fs.copy('./build/tsesm/nodes', './build/prod-esm/nodes'),
                 ]);
                 draft(
-                    '❯ ✔️  Copy components from tsesm/ to dev-esm/ and prod-esm/.',
+                    '❯ ✔️ Copy components from tsesm/ to dev-esm/ and prod-esm/.',
                 );
                 build.onTaskFinish();
             } catch (e) {
                 draft(
                     '❯ ❌ Copy components from tsesm/ to dev-esm/ and prod-esm/.',
                 );
-                throw new Error();
+                throw new Error(e);
             }
         },
         async copyCompsFromTscjs() {
@@ -234,16 +234,16 @@ build.tasks = (() => {
                     ),
                     fs.copy('./build/tsesm/nodes', './build/cjs/nodes'),
                 ]);
-                draft('❯ ✔️  Copy components from tscjs/ to cjs/.');
+                draft('❯ ✔️ Copy components from tscjs/ to cjs/.');
                 build.onTaskFinish();
             } catch (e) {
                 draft('❯ ❌ Copy components from tscjs/ to cjs/.');
-                throw new Error();
+                throw new Error(e);
             }
         },
         async copyAutoCJS() {
             await fs.copy('./src/exnet.auto.cjs.js', './build/cjs/exnet.js');
-            echo('❯ ✔️  Copy exnet.auto.cjs.js to cjs/.');
+            echo('❯ ✔️ Copy exnet.auto.cjs.js to cjs/.');
             build.onTaskFinish();
         },
         async copyDtsFromTsesm() {
@@ -284,14 +284,14 @@ build.tasks = (() => {
                     dtsPaths.map(([src, dest]) => fs.copy(src, dest)),
                 );
                 draft(
-                    '❯ ✔️  Copy dts from tsesm/ to cjs/, dev-esm/, prod-esm/.',
+                    '❯ ✔️ Copy dts from tsesm/ to cjs/, dev-esm/, prod-esm/.',
                 );
                 build.onTaskFinish();
             } catch (e) {
                 draft(
                     '❯ ❌ Copy dts from tsesm/ to cjs/, dev-esm/, prod-esm/.',
                 );
-                throw new Error();
+                throw new Error(e);
             }
         },
         async copyReleaseFiles() {
@@ -310,22 +310,75 @@ build.tasks = (() => {
                 ];
 
                 await Promise.all(promises);
-                draft('❯ ✔️  Copy files.');
+                draft('❯ ✔️ Copy files.');
                 build.onTaskFinish();
             } catch (e) {
                 draft('❯ ❌ Copy files.');
-                throw new Error();
+                throw new Error(e);
             }
         },
         async generatePathMapping() {
-            fs.writeFileSync('./release/dev-esm/path-mapping.js', '\n');
-            fs.writeFileSync('./release/prod-esm/path-mapping.js', '\n');
-            echo('❯ ✔️  generatePathMapping: TO DO.');
+            const devPathMapping =
+                `module.exports = function () {\n` +
+                `    return {\n` +
+                `        exnet: 'exnet/dev-esm'\n` +
+                `    };\n` +
+                `};\n`;
+            const prodPathMapping =
+                `module.exports = function () {\n` +
+                `    return {\n` +
+                `        exnet: 'exnet/prod-esm'\n` +
+                `    };\n` +
+                `};\n`;
+            fs.writeFileSync(
+                './release/dev-esm/path-mapping.js',
+                devPathMapping,
+            );
+            fs.writeFileSync(
+                './release/prod-esm/path-mapping.js',
+                prodPathMapping,
+            );
+            echo('❯ ✔️ Generate path-mapping.js .');
             build.onTaskFinish();
         },
         async correctMapSources() {
-            echo('❯ ✔️  correctMapSources: TO DO.');
-            build.onTaskFinish();
+            const draft = console.draft(
+                '❯ ⌛ Correct the "sources" filed of *.js.map .',
+            );
+            try {
+                const mapFilePaths = await globby('./release/**/*.js.map');
+                const promises = mapFilePaths.map(async (mapPath) => {
+                    const json = await fs.readJSON(mapPath);
+                    if (
+                        typeof json.sourceRoot === 'string' &&
+                        json.sourceRoot !== ''
+                    ) {
+                        throw new Error(
+                            mapPath + ': "sourceRoot" is not empty.',
+                        );
+                    }
+                    const depth = mapPath.split('/').length - 3;
+                    json.sources = json.sources.map((str) => {
+                        str = str.replace(/\.\.\//g, '');
+                        if (depth === 0) {
+                            str = './' + str;
+                        } else {
+                            for (let i = 0; i < depth; ++i) {
+                                str = '../' + str;
+                            }
+                        }
+                        return str;
+                    });
+                    await fs.writeJSON(mapPath, json);
+                });
+                await Promise.all(promises);
+
+                draft('❯ ✔️ Correct the "sources" filed of *.js.map .');
+                build.onTaskFinish();
+            } catch (e) {
+                draft('❯ ❌ Correct the "sources" filed of *.js.map .');
+                throw new Error(e);
+            }
         },
     };
 })();
