@@ -2,10 +2,9 @@ import { nodeResolve } from '@rollup/plugin-node-resolve';
 import sourcemaps from 'rollup-plugin-sourcemaps';
 import replace from '@rollup/plugin-replace';
 import json from '@rollup/plugin-json';
-// import dts from 'rollup-plugin-dts';
 
 const banner = (() => {
-    const version = require('./package.json').version;
+    const version = require('../../package.json').version;
     const year = new Date().getFullYear();
     return (
         `/**\n` +
@@ -32,7 +31,7 @@ export default [
         ],
         output: {
             /* core output options */
-            dir: './build/cjs',
+            file: './build/cjs/exnet.dev.js',
             format: 'cjs',
             globals: [],
 
@@ -62,7 +61,7 @@ export default [
         ],
         output: {
             /* core output options */
-            dir: './build/cjs',
+            file: './build/cjs/exnet.prod.js',
             format: 'cjs',
             globals: [],
 
@@ -78,15 +77,4 @@ export default [
             treeshake: false,
         },
     },
-    // {
-    //     /* core input options */
-    //     external: [],
-    //     input: './build/tsesm/exnet.dev.d.ts',
-    //     plugins: [dts()],
-    //     output: {
-    //         /* core output options */
-    //         file: './build/cjs/exnet.d.ts',
-    //         format: 'es',
-    //     },
-    // },
 ];

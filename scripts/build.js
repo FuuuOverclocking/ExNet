@@ -151,27 +151,27 @@ build.tasks = (() => {
         tsCJS: produceExternalCommandTask(
             'tsCJS',
             'tsc: src -> build/tscjs.',
-            'tsc -p ./tsconfig.cjs.json',
+            'tsc -p ./src/tsconfig.cjs.json',
         ),
         tsESM: produceExternalCommandTask(
             'tsESM',
             'tsc: src -> build/tsesm.',
-            'tsc -p ./tsconfig.esm.json',
+            'tsc -p ./src/tsconfig.esm.json',
         ),
         rollupCJS: produceExternalCommandTask(
             'rollupCJS',
             'rollup: build/tsesm -> build/cjs.',
-            'rollup -c ./rollup.config.cjs.js',
+            'rollup -c ./scripts/rollup/rollup.config.cjs.js',
         ),
         rollupESM: produceExternalCommandTask(
             'rollupESM',
             'rollup: build/tsesm -> build/dev-esm, build/prod-esm.',
-            'rollup -c ./rollup.config.esm.js',
+            'rollup -c ./scripts/rollup/rollup.config.esm.js',
         ),
         rollupUMD: produceExternalCommandTask(
             'rollupUMD',
             'rollup: build/tsesm -> build/umd.',
-            'rollup -c ./rollup.config.umd.js',
+            'rollup -c ./scripts/rollup/rollup.config.umd.js',
         ),
         compressUmdNoComp: produceExternalCommandTask(
             'compressUmdNoComp',

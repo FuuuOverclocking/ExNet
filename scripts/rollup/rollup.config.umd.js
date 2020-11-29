@@ -4,7 +4,7 @@ import replace from '@rollup/plugin-replace';
 import json from '@rollup/plugin-json';
 
 const banner = (() => {
-    const version = require('./package.json').version;
+    const version = require('../../package.json').version;
     const year = new Date().getFullYear();
     return (
         `/**\n` +

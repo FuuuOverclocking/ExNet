@@ -10,7 +10,7 @@
     "sideEffects": false,
     "scripts": {
         "get-help": "node scripts/print-help.js",
-        "start": "tsc -p ./tsconfig.cjs.json --watch",
+        "start": "tsc -p ./src/tsconfig.cjs.json --watch",
         "build": "node scripts/build.js",
         "make-package": "node scripts/build.js --make-package",
         "test": "echo 'Not yet supported'",

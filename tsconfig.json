@@ -1,7 +1,7 @@
 // This file is only used for editor automatic detection
 // and is not involved in project building.
 {
-    "extends": "./tsconfig.cjs.json",
+    "extends": "./src/tsconfig.cjs.json",
     "include": [
         "./src/**/*"
     ],

@@ -50,7 +50,7 @@ module.exports = {
                 tsconfigRootDir: __dirname,
                 ecmaVersion: 2015,
                 sourceType: 'module',
-                project: ['./tsconfig.cjs.json'],
+                project: ['./src/tsconfig.cjs.json'],
             },
             rules: {
                 '@typescript-eslint/ban-types': [
