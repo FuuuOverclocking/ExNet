@@ -80,6 +80,7 @@ module.exports = {
                 '@typescript-eslint/no-unsafe-call': off,
                 '@typescript-eslint/no-unsafe-member-access': off,
                 '@typescript-eslint/no-unsafe-return': off,
+                '@typescript-eslint/no-unused-vars': error,
                 '@typescript-eslint/restrict-template-expressions': off,
                 curly: [error, 'multi-line'],
                 'max-len': [error, { code: 95 }],
