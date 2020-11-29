@@ -1,0 +1,8 @@
+// This file is only used for editor automatic detection
+// and is not involved in project building.
+{
+    "extends": "./tsconfig.cjs.json",
+    "include": [
+        "./src/**/*"
+    ],
+}

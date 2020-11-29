@@ -64,6 +64,7 @@
 
         /* Advanced Options */
         "skipLibCheck": true,                     /* Skip type checking of declaration files. */
-        "forceConsistentCasingInFileNames": true  /* Disallow inconsistently-cased references to the same file. */
+        "forceConsistentCasingInFileNames": true, /* Disallow inconsistently-cased references to the same file. */
+        "stripInternal": true,                    /* Do not emit declarations for code that has an @internal annotation in it’s JSDoc comment. */
     }
 }
