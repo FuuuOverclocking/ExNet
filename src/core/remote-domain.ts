@@ -1,4 +1,4 @@
-import { Domain } from './types';
+import type { Domain } from './types';
 
 export class RemoteDomain implements Domain {
     public readonly isLocal: false = false;

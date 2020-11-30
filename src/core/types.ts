@@ -20,6 +20,7 @@ export type { LocalDomain, RemoteDomain };
 
 export interface Group {
     readonly domain: Domain;
+    readonly gid: number;
 }
 
 import type { LocalGroup } from './local-group';
@@ -39,29 +40,33 @@ export const enum ElementType {
     VirtualPort,
 }
 
-export type { NodeCore } from './node-core';
-export type { SubnetCore } from './subnet-core';
-
 // prettier-ignore
 export type NodeLikeType =
     | ElementType.LocalNode
     | ElementType.LocalSubnet
     | ElementType.RemoteNode
+    | ElementType.UnknownNode
     | ElementType.VirtualNode
+    ;
+
+// prettier-ignore
+export type NodeType =
+    | ElementType.LocalNode
+    | ElementType.LocalSubnet
+    | ElementType.RemoteNode
     | ElementType.UnknownNode
     ;
+
+import type { NodeCore } from './node-core';
+import type { SubnetCore } from './subnet-core';
+export type { NodeCore, SubnetCore };
 
 export interface NodeLike {
     readonly type: NodeLikeType;
 }
 
-export interface Node {
-    readonly domain: Domain;
-    readonly isSubnet: boolean;
-}
-
-export interface Subnet extends Node {
-    readonly isSubnet: true;
+export interface Node extends NodeLike {
+    readonly type: NodeType;
 }
 
 import type { LocalNode } from './local-node';
@@ -72,7 +77,7 @@ import type { UnknownNode } from './unknown-node';
 export type { LocalNode, LocalSubnet, RemoteNode, VirtualNode, UnknownNode };
 
 export namespace Node {
-    export interface DefaultPorts<I = any, O = any> {
+    export interface DefaultPorts<I, O> {
         $I: I;
         $O: O;
         $E: NodeError;
@@ -88,18 +93,23 @@ export namespace Node {
         };
     };
 
-    export const enum NodeRunningStage {
+    export const enum NodeWorkingStage {
+        // Node is activated
         NodeWillRun,
+        // Trigger event `NodeWillRun`
         NodeIsRunning,
+        // Trigger event `NodeRun`
         NodeDidRun,
-        NodeEnded,
+        // Trigger event `NodeDidRun`
+        NodeStopped,
+        // Node is deactivated
     }
 
     export interface NodeError {
         node: Node;
         error: Error;
-        stage: NodeRunningStage;
-        dataSnapshot: any;
+        stage: NodeWorkingStage;
+        // dataSnapshot: any;
         controlInfo: NodeControlInfo;
     }
 
@@ -107,7 +117,7 @@ export namespace Node {
         port?: Port;
     }
 
-    export type NodeRunConsole<N extends LocalNode> = {
+    export type NodeRunConsole<N extends LocalNode<any, any>> = {
         node: N;
         state: getStateOfLocalNode<N>;
         entry: {
@@ -123,7 +133,7 @@ export namespace Node {
         ) => void;
     };
 
-    export const enum NodeEventType {
+    export const enum LocalNodeEventType {
         NodeWillPipe,
         NodeDidPipe,
         NodeDidUnpipe,
@@ -139,36 +149,50 @@ export namespace Node {
         NodeDidGetChild,
         NodeStateChange,
         NodeThrowError,
+
+        // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+        NumberOfEventTypes = NodeThrowError + 1,
+    }
+
+    export const enum RemoteNodeEventType {
+        NodeDidPipe,
+        NodeDidUnpipe,
+        NodeDidBecomeChild,
+        NodeWillRunNotice,
+        NodeDidRunNotice,
+        NodePortsStateChange,
+        NodeStateChange,
         NodeGoOnline,
         NodeGoOffline,
         RemoteError,
-        NodeRunNotice,
-        NodeDidRunNotice,
+
+        // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+        NumberOfEventTypes = RemoteError + 1,
     }
 
     // prettier-ignore
     export const enum NodeEventPriority {
-        SystemLow = 0,       //  0- 4
-        Low = 5,             //  5- 9
-        BelowNormal = 10,    // 10-14
-        Normal = 15,         // 15
-        AboveNormal = 16,    // 16-20
-        High = 21,           // 21-25
-        SystemHigh = 26,     // 26-31
+        SystemLow   =  0, //  0- 4
+        Low         =  5, //  5- 9
+        BelowNormal = 10, // 10-14
+        Normal      = 15, // 15
+        AboveNormal = 16, // 16-20
+        High        = 21, // 21-25
+        SystemHigh  = 26, // 26-31
+    }
+
+    export interface NodeEventHandler extends Function {
+        fromAttr?: Attr;
+        priority: number;
     }
 
     export namespace NodeEvent {
-        export interface NodeEventHandler extends Function {
-            fromAttr?: Attr;
-            priority?: number;
-        }
-
-        export type NodeRun<N extends LocalNode> = (
+        export type NodeRun<N extends LocalNode<any, any>> = (
             this: NodeRunConsole<N>,
             data: any,
         ) => void | Promise<void>;
 
-        export type SubnetRun<N extends LocalNode> = (
+        export type SubnetRun<N extends LocalNode<any, any>> = (
             this: NodeRunConsole<N>,
             data: any,
             runNet: () => void,

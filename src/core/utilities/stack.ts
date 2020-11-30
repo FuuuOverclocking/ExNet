@@ -1,4 +1,4 @@
-export class Stack<T = any> {
+export class Stack<T> {
     public stack: T[] = [];
 
     public top(): T | undefined {

@@ -5,7 +5,7 @@ import {
     LoggableObject,
     MessageWithNodeAndComponent,
 } from './types';
-import { Node } from '../types';
+import type { Node, NodeCore, SubnetCore } from '../types';
 import { CLILogService } from './cli-log-service';
 
 const logServices: LogService[] = [];
@@ -26,10 +26,6 @@ function logMessage(level: LogLevel, thing: string | LoggableObject): void {
     }
 }
 
-export function log(thing: string | LoggableObject): void {
-    logMessage(LogLevel.Info, thing);
-}
-
 export namespace log {
     export function error(thing: string | LoggableObject): void {
         logMessage(LogLevel.Error, thing);
@@ -46,14 +42,30 @@ export namespace log {
     export function debug(thing: string | LoggableObject): void {
         logMessage(LogLevel.Debug, thing);
     }
-}
 
-export function withNC(
-    msg: string,
-    node?: Node | 0,
-    comp?: string,
-): MessageWithNodeAndComponent {
-    return { msg, node: node || void 0, comp };
+    // eslint-disable-next-line no-inner-declarations
+    function withNodeAndComponent(
+        msg: string,
+        node?: Node | NodeCore<any, any> | SubnetCore<any, any> | 0,
+        comp?: string,
+    ): MessageWithNodeAndComponent {
+        return { msg, node: node || void 0, comp };
+    }
+
+    export const withNC = {
+        error(...args: Parameters<typeof withNodeAndComponent>): void {
+            error(withNodeAndComponent(...args));
+        },
+        warn(...args: Parameters<typeof withNodeAndComponent>): void {
+            warn(withNodeAndComponent(...args));
+        },
+        info(...args: Parameters<typeof withNodeAndComponent>): void {
+            info(withNodeAndComponent(...args));
+        },
+        debug(...args: Parameters<typeof withNodeAndComponent>): void {
+            debug(withNodeAndComponent(...args));
+        },
+    };
 }
 
 export function registerLogService(...services: LogService[]): void {

@@ -1,6 +1,6 @@
 import type { ExPort, LocalNode } from './types';
 
-export type Dictionary<T = any> = { [key: string]: T };
+export type Dictionary<T> = { [key: string]: T };
 
 // prettier-ignore
 export type getStateOfLocalNode<N> =

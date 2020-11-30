@@ -1,4 +1,4 @@
-import { Node } from '../types';
+import { Node, NodeCore, SubnetCore } from '../types';
 
 export const enum LogLevel {
     Off = 0,
@@ -16,6 +16,6 @@ export type LoggableObject = MessageWithNodeAndComponent;
 
 export interface MessageWithNodeAndComponent {
     msg: string;
-    node?: Node;
+    node?: Node | NodeCore<any, any> | SubnetCore<any, any>;
     comp?: string;
 }

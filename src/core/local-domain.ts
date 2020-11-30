@@ -11,9 +11,13 @@ export interface LocalDomain extends Domain {
     readonly isLocal: true;
 
     /** @internal */
-    readonly localNodeCounters: {
-        nid: number;
-        runID: TinyBigInt;
+    readonly localCounters: {
+        nodeNid: number;
+        nodeActID: TinyBigInt;
+        groupGid: number;
+        allocateNodeNid(): number;
+        allocateNodeActID(): TinyBigInt;
+        allocateGroupGid(): number;
     };
 
     readonly remoteDomains: Set<RemoteDomain>;
@@ -38,9 +42,21 @@ export const LocalDomain: LocalDomain = {
     isLocal: true,
 
     /** @internal */
-    localNodeCounters: {
-        nid: 0,
-        runID: new TinyBigInt(0),
+    localCounters: {
+        nodeNid: 0,
+        nodeActID: new TinyBigInt(0),
+        groupGid: 0,
+        allocateNodeNid(): number {
+            return this.nodeNid++;
+        },
+        allocateNodeActID(): TinyBigInt {
+            const num = new TinyBigInt(this.nodeActID);
+            this.nodeActID.addOne();
+            return num;
+        },
+        allocateGroupGid(): number {
+            return this.groupGid++;
+        },
     },
 
     remoteDomains: new Set<RemoteDomain>(),
