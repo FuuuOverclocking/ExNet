@@ -1,25 +1,29 @@
 import { isPromise } from './index';
 
+export namespace Asap {
+    export type cancelToken = { __AsapCancelTokenBrand__: any };
+}
+
 export class Asap {
-    private static cancelSymbol = Symbol();
+    public static readonly cancelToken: Asap.cancelToken = {} as any;
 
     public static tryCatch(
-        tryFn: () => void | Promise<void>,
+        tryFn: () => void | Asap.cancelToken | Promise<void | Asap.cancelToken>,
         catchFn: (e: any) => void,
     ): Asap {
-        let result: void | symbol | Promise<void | symbol>;
+        let result: void | Asap.cancelToken | Promise<void | Asap.cancelToken>;
 
         try {
             result = tryFn();
         } catch (e) {
             catchFn(e);
-            result = Asap.cancelSymbol;
+            result = Asap.cancelToken;
         }
 
         if (isPromise(result)) {
             result = result.catch((e) => {
                 catchFn(e);
-                return Asap.cancelSymbol;
+                return Asap.cancelToken;
             });
         }
         return new Asap(result);
@@ -30,11 +34,14 @@ export class Asap {
          * if `result` is not undefined, then it must be a `Promise`
          * in `pending` or `resolved` state, never in `rejected` state.
          */
-        public result: void | symbol | Promise<void | symbol>,
+        public result:
+            | void
+            | Asap.cancelToken
+            | Promise<void | Asap.cancelToken>,
     ) {}
 
     public thenTryCatch(
-        tryFn: () => void | Promise<void>,
+        tryFn: () => void | Asap.cancelToken | Promise<void | Asap.cancelToken>,
         catchFn: (e: any) => void,
     ): this {
         let result = this.result;
@@ -42,25 +49,25 @@ export class Asap {
         if (isPromise(result)) {
             result = result
                 .then((val) => {
-                    if (val === Asap.cancelSymbol) return val;
+                    if (val === Asap.cancelToken) return val;
                     return tryFn();
                 })
                 .catch((e) => {
                     catchFn(e);
-                    return Asap.cancelSymbol;
+                    return Asap.cancelToken;
                 });
-        } else if (result !== Asap.cancelSymbol) {
+        } else if (result !== Asap.cancelToken) {
             try {
                 result = tryFn();
             } catch (e) {
                 catchFn(e);
-                result = Asap.cancelSymbol;
+                result = Asap.cancelToken;
             }
 
             if (isPromise(result)) {
                 result = result.catch((e) => {
                     catchFn(e);
-                    return Asap.cancelSymbol;
+                    return Asap.cancelToken;
                 });
             }
         }
@@ -68,20 +75,57 @@ export class Asap {
         return this;
     }
 
-    public static execFunctions<FuncArgs extends any[]>(
-        functions: Array<(...args: FuncArgs) => void | Promise<void>>,
-        ...args: FuncArgs
+    public static execFunctions<
+        F extends (...args: any[]) => void | Promise<void>
+    >(
+        functions: F[],
+        thisArg: ThisParameterType<F>,
+        ...args: Parameters<F>
     ): void | Promise<void> {
         const len = functions.length;
         for (let i = 0; i < len; ++i) {
-            const result = functions[i](...args);
+            const result = functions[i].apply(thisArg, args);
             if (isPromise(result)) {
                 return functions
                     .slice(i + 1)
                     .reduce(
-                        (promise, fn) => promise.then(() => fn(...args)),
+                        (promise, fn) =>
+                            promise.then(() => fn.apply(thisArg, args)),
                         result,
                     );
+            }
+        }
+    }
+
+    public static execFunctionsAndCheck<
+        F extends (...args: any[]) => void | Promise<void>
+    >(
+        check: () => boolean,
+        functions: F[],
+        thisArg: ThisParameterType<F>,
+        ...args: Parameters<F>
+    ): void | Promise<void> {
+        const len = functions.length;
+        let cancelled = false;
+        let result: void | Promise<void>;
+
+        for (let i = 0; i < len; ++i) {
+            result = functions[i].apply(thisArg, args);
+            if (!check()) return;
+
+            if (isPromise(result)) {
+                return functions.slice(i + 1).reduce(
+                    (promise, fn) =>
+                        promise.then(() => {
+                            if (cancelled) return;
+                            if (!check()) {
+                                cancelled = true;
+                                return;
+                            }
+                            return fn.apply(thisArg, args);
+                        }),
+                    result,
+                );
             }
         }
     }

@@ -4,6 +4,7 @@ export * from './tiny-big-int';
 export * from './stack';
 export * from './priority-queue';
 export * from './elem-is';
+export * from './asap';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 export function noop(): void {}

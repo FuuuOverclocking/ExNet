@@ -2,6 +2,10 @@ import type { ExPort, LocalNode } from './types';
 
 export type Dictionary<T> = { [key: string]: T };
 
+export interface AnyFunction {
+    (...args: any[]): any;
+}
+
 // prettier-ignore
 export type getStateOfLocalNode<N> =
     N extends LocalNode<infer S, any> ? S : never;

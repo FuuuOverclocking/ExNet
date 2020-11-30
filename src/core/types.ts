@@ -1,10 +1,9 @@
 import type {
-    Dictionary,
     getPortsOfLocalNode,
     getStateOfLocalNode,
     extractTypeFromPortTypeDescriptor,
 } from './utility-types';
-export type { Dictionary };
+export * from './utility-types';
 
 export interface Domain {
     /** Domain ID uniquely identifies a domain among interconnected domains. */
@@ -114,15 +113,18 @@ export namespace Node {
     }
 
     export interface NodeControlInfo {
-        port?: Port;
+        port: Port;
     }
 
     export type NodeRunConsole<N extends LocalNode<any, any>> = {
-        node: N;
+        readonly node: N['exNode'];
         state: getStateOfLocalNode<N>;
-        entry: {
-            [portName in keyof getPortsOfLocalNode<N>]: boolean;
+        readonly entry: {
+            readonly [portName in keyof getPortsOfLocalNode<N>]:
+                | true
+                | undefined;
         } & {
+            readonly name: string;
             is(portName: string): boolean;
         };
     } & {
@@ -181,7 +183,7 @@ export namespace Node {
         SystemHigh  = 26, // 26-31
     }
 
-    export interface NodeEventHandler extends Function {
+    export interface NodeEventHandler {
         fromAttr?: Attr;
         priority: number;
     }
@@ -197,6 +199,16 @@ export namespace Node {
             data: any,
             runNet: () => void,
         ) => void | Promise<void>;
+
+        export interface NodeWillRunArgs {
+            data: any;
+            controlInfo: NodeControlInfo;
+            preventRunning: () => void;
+        }
+        export interface NodeWillRun<N extends LocalNode<any, any>>
+            extends NodeEventHandler {
+            (this: N['exNode'], args: NodeWillRunArgs): void | Promise<void>;
+        }
     }
 }
 
