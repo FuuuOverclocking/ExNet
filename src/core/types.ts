@@ -2,6 +2,8 @@ import type {
     getPortsOfLocalNode,
     getStateOfLocalNode,
     extractTypeFromPortTypeDescriptor,
+    Dictionary,
+    AnyFunction,
 } from './utility-types';
 export * from './utility-types';
 
@@ -75,6 +77,19 @@ import type { VirtualNode } from './virtual-node';
 import type { UnknownNode } from './unknown-node';
 export type { LocalNode, LocalSubnet, RemoteNode, VirtualNode, UnknownNode };
 
+import type { LocalPort } from './local-port';
+import type { RemotePort } from './remote-port';
+import type { VirtualPort } from './virtual-port';
+
+// prettier-ignore
+export type ExNode<S, P extends object> =
+    & LocalNode<S, P>
+    & { (data: any): void | Promise<void> }
+    & { [portName in keyof P]: LocalPort<P[portName]> }
+    ;
+
+export type ExPort<T = any, D = Port.PortIORole> = LocalPort<T, D>;
+
 export namespace Node {
     export interface DefaultPorts<I, O> {
         $I: I;
@@ -114,10 +129,11 @@ export namespace Node {
 
     export interface NodeControlInfo {
         port: Port;
+        runStack?: any;
     }
 
     export type NodeRunConsole<N extends LocalNode<any, any>> = {
-        readonly node: N['exNode'];
+        readonly node: N['proxiedNode'];
         state: getStateOfLocalNode<N>;
         readonly entry: {
             readonly [portName in keyof getPortsOfLocalNode<N>]:
@@ -127,6 +143,11 @@ export namespace Node {
             readonly name: string;
             is(portName: string): boolean;
         };
+
+        /** @internal */
+        readonly __RawNode__: N;
+        /** @internal */
+        readonly __ControlInfo__: NodeControlInfo;
     } & {
         [portName in keyof getPortsOfLocalNode<N>]: (
             data: extractTypeFromPortTypeDescriptor<
@@ -183,7 +204,12 @@ export namespace Node {
         SystemHigh  = 26, // 26-31
     }
 
-    export interface NodeEventHandler {
+    export interface Attr {
+        name: string;
+        events?: Dictionary<AnyFunction>;
+    }
+
+    export interface NodeEventHandler extends Function {
         fromAttr?: Attr;
         priority: number;
     }
@@ -200,14 +226,29 @@ export namespace Node {
             runNet: () => void,
         ) => void | Promise<void>;
 
-        export interface NodeWillRunArgs {
+        export interface NodeWillRunArgument {
             data: any;
             controlInfo: NodeControlInfo;
             preventRunning: () => void;
         }
         export interface NodeWillRun<N extends LocalNode<any, any>>
             extends NodeEventHandler {
-            (this: N['exNode'], args: NodeWillRunArgs): void | Promise<void>;
+            (
+                this: N['proxiedNode'],
+                arg: NodeWillRunArgument,
+            ): void | Promise<void>;
+        }
+
+        export interface NodeDidRunArgument {
+            data: any;
+            controlInfo: NodeControlInfo;
+        }
+        export interface NodeDidRun<N extends LocalNode<any, any>>
+            extends NodeEventHandler {
+            (
+                this: N['proxiedNode'],
+                arg: NodeDidRunArgument,
+            ): void | Promise<void>;
         }
     }
 }
@@ -220,8 +261,4 @@ export namespace Port {
         In = 1,
         Undetermined = 2,
     }
-}
-
-export interface ExPort<T = any, D = Port.PortIORole> {
-    __ExPortBrand__: any;
 }

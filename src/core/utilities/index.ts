@@ -3,7 +3,7 @@ export * from './cuuid';
 export * from './tiny-big-int';
 export * from './stack';
 export * from './priority-queue';
-export * from './elem-is';
+export * from './it-is';
 export * from './asap';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -39,8 +39,4 @@ export function mergeTwo<T, U, V>(
     }
 
     return target as T & U & V;
-}
-
-export function isPromise(obj: any): obj is Promise<any> {
-    return obj instanceof Promise;
 }

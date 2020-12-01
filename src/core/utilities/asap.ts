@@ -1,4 +1,4 @@
-import { isPromise } from './index';
+import { It } from './it-is';
 
 export namespace Asap {
     export type cancelToken = { __AsapCancelTokenBrand__: any };
@@ -20,7 +20,7 @@ export class Asap {
             result = Asap.cancelToken;
         }
 
-        if (isPromise(result)) {
+        if (It.isPromise(result)) {
             result = result.catch((e) => {
                 catchFn(e);
                 return Asap.cancelToken;
@@ -46,7 +46,7 @@ export class Asap {
     ): this {
         let result = this.result;
 
-        if (isPromise(result)) {
+        if (It.isPromise(result)) {
             result = result
                 .then((val) => {
                     if (val === Asap.cancelToken) return val;
@@ -64,7 +64,7 @@ export class Asap {
                 result = Asap.cancelToken;
             }
 
-            if (isPromise(result)) {
+            if (It.isPromise(result)) {
                 result = result.catch((e) => {
                     catchFn(e);
                     return Asap.cancelToken;
@@ -85,7 +85,7 @@ export class Asap {
         const len = functions.length;
         for (let i = 0; i < len; ++i) {
             const result = functions[i].apply(thisArg, args);
-            if (isPromise(result)) {
+            if (It.isPromise(result)) {
                 return functions
                     .slice(i + 1)
                     .reduce(
@@ -113,7 +113,7 @@ export class Asap {
             result = functions[i].apply(thisArg, args);
             if (!check()) return;
 
-            if (isPromise(result)) {
+            if (It.isPromise(result)) {
                 return functions.slice(i + 1).reduce(
                     (promise, fn) =>
                         promise.then(() => {

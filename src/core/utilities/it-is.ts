@@ -1,6 +1,6 @@
 import { ElementType, NodeCore, SubnetCore } from '../types';
 
-export namespace Elem {
+export namespace It {
     export function isCore(
         value: any,
     ): value is NodeCore<any, any> | SubnetCore<any, any> {
@@ -15,5 +15,15 @@ export namespace Elem {
     }
     export function isSubnetCore(value: any): value is SubnetCore<any, any> {
         return value && value.type === ElementType.SubnetCore;
+    }
+
+    export function isPromise(value: any): value is Promise<any> {
+        return value instanceof Promise;
+    }
+
+    export function isPortName(value: any): value is string {
+        return (
+            typeof value === 'string' && value[0] === '$' && value.length !== 1
+        );
     }
 }
