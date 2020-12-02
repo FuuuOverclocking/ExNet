@@ -1,4 +1,11 @@
-import { Dictionary, ElementType, ExNode, LocalGroup, Node } from './types';
+import {
+    AnyFunction,
+    Dictionary,
+    ElementType,
+    ExNode,
+    LocalGroup,
+    Node,
+} from './types';
 import { Asap, It, merge, noop } from './utilities';
 import { LocalDomain } from './local-domain';
 import { NodeCore } from './node-core';
@@ -73,7 +80,7 @@ export class LocalNode<S, P extends object> implements Node {
 
     /* Topology */
     public readonly ports!: any;
-    public readonly portsState!: Node.NodePortsState<P>;
+    public readonly portsState!: Node.PortsState<P>;
 
     /* State */
     public get state(): S {
@@ -84,7 +91,7 @@ export class LocalNode<S, P extends object> implements Node {
     }
 
     /* Events */
-    public on(event: Node.LocalNodeEventType, handler: Function): void {
+    public on(event: number | string, handler: AnyFunction): void {
         this.core.on(event, handler);
     }
 
@@ -101,7 +108,7 @@ export class LocalNode<S, P extends object> implements Node {
     /** The call signature without parameters is only used for inheritance of LocalSubnet. */
     constructor();
     constructor(core: NodeCore<S, P>);
-    constructor(state: S, onrun: Node.NodeEvent.NodeRun<LocalNode<S, P>>);
+    constructor(state: S, onrun: Node.Event.NodeRun<LocalNode<S, P>>);
     constructor(state?: any, onrun?: any) {
         if (It.isNodeCore(state)) {
             this.initNode(state);
@@ -155,7 +162,7 @@ export class LocalNode<S, P extends object> implements Node {
 
     public activate(
         data: any,
-        controlInfo: Node.NodeControlInfo,
+        controlInfo: Node.ControlInfo,
     ): void | Promise<void> {
         // Node is activated
 
@@ -164,7 +171,7 @@ export class LocalNode<S, P extends object> implements Node {
         const me = this.rawNode;
 
         const actID = localCounters.allocateNodeActID();
-        let stage = Node.NodeWorkingStage.NodeWillRun;
+        let stage = Node.WorkingStage.NodeWillRun;
 
         let prevented = false;
 
@@ -172,14 +179,14 @@ export class LocalNode<S, P extends object> implements Node {
         // Trigger event `NodeWillRun`
         const asapResult = Asap.tryCatch(
             () => {
-                const handlers: undefined | Node.NodeEvent.NodeWillRun<this>[] =
+                const handlers: undefined | Node.Event.NodeWillRunHandler<this>[] =
                     me.core.eventHandlers[
-                        Node.LocalNodeEventType.NodeWillRun
+                        Node.Event.LocalNodeEventType.NodeWillRun
                     ] as any;
 
                 if (!handlers || handlers.length === 0) return;
 
-                const arg: Node.NodeEvent.NodeWillRunArgument = {
+                const arg: Node.Event.NodeWillRunArgument = {
                     data,
                     controlInfo,
                     preventRunning: () => {
@@ -208,7 +215,7 @@ export class LocalNode<S, P extends object> implements Node {
             () => {
                 if (prevented) return Asap.cancelToken;
 
-                stage = Node.NodeWorkingStage.NodeIsRunning;
+                stage = Node.WorkingStage.NodeIsRunning;
 
                 const nodeRunConsole: Node.NodeRunConsole<LocalNode<S, P>> =
                     Object.create(me.nodeRunConsolePrototype);
@@ -241,16 +248,16 @@ export class LocalNode<S, P extends object> implements Node {
         // Trigger event `NodeDidRun`
         .thenTryCatch(
             () => {
-                stage = Node.NodeWorkingStage.NodeDidRun;
+                stage = Node.WorkingStage.NodeDidRun;
 
-                const handlers: undefined | Node.NodeEvent.NodeDidRun<this>[] =
+                const handlers: undefined | Node.Event.NodeDidRunHandler<this>[] =
                     me.core.eventHandlers[
-                        Node.LocalNodeEventType.NodeDidRun
+                        Node.Event.LocalNodeEventType.NodeDidRun
                     ] as any;
 
                 if (!handlers || handlers.length === 0) return;
 
-                const arg: Node.NodeEvent.NodeDidRunArgument = {
+                const arg: Node.Event.NodeDidRunArgument = {
                     data,
                     controlInfo,
                 };
@@ -268,7 +275,7 @@ export class LocalNode<S, P extends object> implements Node {
         // Node is deactivated
         .thenTryCatch(
             () => {
-                stage = Node.NodeWorkingStage.NodeStopped;
+                stage = Node.WorkingStage.NodeStopped;
             },
             noop,
         )
@@ -288,7 +295,34 @@ export class LocalNode<S, P extends object> implements Node {
         fromChild: boolean,
         nodeError: Node.NodeError,
     ): void {
-        // ...
+        const me = this.rawNode;
+
+        // prettier-ignore
+        const handlers: undefined | Node.Event.NodeThrowErrorHandler<this>[] =
+            me.core.eventHandlers[Node.Event.LocalNodeEventType.NodeThrowError] as any;
+
+        if (handlers) {
+            for (const handler of handlers) {
+                const isCatched = handler.call(
+                    me.proxiedNode,
+                    fromChild,
+                    nodeError,
+                );
+                if (isCatched) return;
+            }
+        }
+
+        if ((me as any).portsState.$E?.outerLinkNum) {
+            // 输出 nodeError 到 $E
+            return;
+        }
+
+        if (me.net.parent) {
+            me.net.parent.emitNodeThrowError();
+            return;
+        }
+
+        LocalDomain.emitUncaughtNodeError(nodeError);
     }
 }
 

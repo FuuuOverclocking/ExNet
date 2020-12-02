@@ -12,7 +12,11 @@ export interface LogService {
     input(level: LogLevel, s: string | LoggableObject): void;
 }
 
-export type LoggableObject = MessageWithNodeAndComponent;
+// prettier-ignore
+export type LoggableObject =
+    | MessageWithNodeAndComponent
+    | Node.NodeError
+    ;
 
 export interface MessageWithNodeAndComponent {
     msg: string;

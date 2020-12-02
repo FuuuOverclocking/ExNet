@@ -18,7 +18,7 @@ export class SubnetCore<S, P extends object> {
 
     constructor(
         public state: S,
-        public readonly onrun: Node.NodeEvent.NodeRun<LocalSubnet<S, P>>,
+        public readonly onrun: Node.Event.NodeRun<LocalSubnet<S, P>>,
     ) {}
 
     public addShell(shell: LocalSubnet<S, P>): void {

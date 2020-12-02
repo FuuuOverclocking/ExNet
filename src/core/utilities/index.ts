@@ -5,6 +5,7 @@ export * from './stack';
 export * from './priority-queue';
 export * from './it-is';
 export * from './asap';
+export * from './event-str2num';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 export function noop(): void {}

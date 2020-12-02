@@ -15,6 +15,25 @@ export interface Domain {
     readonly isLocal: boolean;
 }
 
+export namespace Domain {
+    export namespace Event {
+        export const enum LocalDomainEventType {
+            UncaughtNodeError = 0,
+
+            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+            NumberOfEventTypes = 1,
+        }
+        /**
+         * Event handler for uncaught node error.
+         * @returns Whether the error is caught and properly handled.
+         */
+        export type UncaughtNodeErrorHandler = (
+            this: LocalDomain,
+            nodeError: Node.NodeError,
+        ) => boolean;
+    }
+}
+
 import type { LocalDomain } from './local-domain';
 import type { RemoteDomain } from './remote-domain';
 export type { LocalDomain, RemoteDomain };
@@ -98,7 +117,7 @@ export namespace Node {
         [portName: string]: any;
     }
 
-    export type NodePortsState<P extends object> = {
+    export type PortsState<P extends object> = {
         [portName in keyof P]?: {
             direction: Port.PortIORole;
             outerLinkNum: number;
@@ -107,7 +126,7 @@ export namespace Node {
         };
     };
 
-    export const enum NodeWorkingStage {
+    export const enum WorkingStage {
         // Node is activated
         NodeWillRun,
         // Trigger event `NodeWillRun`
@@ -122,12 +141,12 @@ export namespace Node {
     export interface NodeError {
         node: Node;
         error: Error;
-        stage: NodeWorkingStage;
+        stage: WorkingStage;
         // dataSnapshot: any;
-        controlInfo: NodeControlInfo;
+        controlInfo: ControlInfo;
     }
 
-    export interface NodeControlInfo {
+    export interface ControlInfo {
         port: Port;
         runStack?: any;
     }
@@ -136,18 +155,18 @@ export namespace Node {
         readonly node: N['proxiedNode'];
         state: getStateOfLocalNode<N>;
         readonly entry: {
+            readonly name: string;
+            is(portName: string): boolean;
+        } & {
             readonly [portName in keyof getPortsOfLocalNode<N>]:
                 | true
                 | undefined;
-        } & {
-            readonly name: string;
-            is(portName: string): boolean;
         };
 
         /** @internal */
         readonly __RawNode__: N;
         /** @internal */
-        readonly __ControlInfo__: NodeControlInfo;
+        readonly __ControlInfo__: ControlInfo;
     } & {
         [portName in keyof getPortsOfLocalNode<N>]: (
             data: extractTypeFromPortTypeDescriptor<
@@ -156,65 +175,62 @@ export namespace Node {
         ) => void;
     };
 
-    export const enum LocalNodeEventType {
-        NodeWillPipe,
-        NodeDidPipe,
-        NodeDidUnpipe,
-        NodeWillInnerPipe,
-        NodeDidInnerPipe,
-        NodeDidInnerUnpipe,
-        NodeWillRun,
-        NodeRun,
-        NodeDidRun,
-        NodeWillOutput,
-        NodePortsStateChange,
-        NodeDidBecomeChild,
-        NodeDidGetChild,
-        NodeStateChange,
-        NodeThrowError,
-
-        // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-        NumberOfEventTypes = NodeThrowError + 1,
-    }
-
-    export const enum RemoteNodeEventType {
-        NodeDidPipe,
-        NodeDidUnpipe,
-        NodeDidBecomeChild,
-        NodeWillRunNotice,
-        NodeDidRunNotice,
-        NodePortsStateChange,
-        NodeStateChange,
-        NodeGoOnline,
-        NodeGoOffline,
-        RemoteError,
-
-        // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-        NumberOfEventTypes = RemoteError + 1,
-    }
-
-    // prettier-ignore
-    export const enum NodeEventPriority {
-        SystemLow   =  0, //  0- 4
-        Low         =  5, //  5- 9
-        BelowNormal = 10, // 10-14
-        Normal      = 15, // 15
-        AboveNormal = 16, // 16-20
-        High        = 21, // 21-25
-        SystemHigh  = 26, // 26-31
-    }
-
     export interface Attr {
         name: string;
         events?: Dictionary<AnyFunction>;
     }
 
-    export interface NodeEventHandler extends Function {
-        fromAttr?: Attr;
-        priority: number;
-    }
+    export namespace Event {
+        export interface EventHandler extends Function {
+            fromAttr?: Attr;
+            priority: number;
+        }
+        export const enum LocalNodeEventType {
+            NodeWillPipe,
+            NodeDidPipe,
+            NodeDidUnpipe,
+            NodeWillInnerPipe,
+            NodeDidInnerPipe,
+            NodeDidInnerUnpipe,
+            NodeWillRun,
+            NodeRun,
+            NodeDidRun,
+            NodeWillOutput,
+            NodePortsStateChange,
+            NodeDidBecomeChild,
+            NodeDidGetChild,
+            NodeStateChange,
+            NodeThrowError,
 
-    export namespace NodeEvent {
+            NumberOfEventTypes = 15,
+        }
+
+        export const enum RemoteNodeEventType {
+            NodeDidPipe,
+            NodeDidUnpipe,
+            NodeDidBecomeChild,
+            NodeWillRunNotice,
+            NodeDidRunNotice,
+            NodePortsStateChange,
+            NodeStateChange,
+            NodeGoOnline,
+            NodeGoOffline,
+            RemoteError,
+
+            NumberOfEventTypes = 10,
+        }
+
+        // prettier-ignore
+        export const enum EventPriority {
+            SystemLow   =  0, //  0- 4
+            Low         =  5, //  5- 9
+            BelowNormal = 10, // 10-14
+            Normal      = 15, // 15
+            AboveNormal = 16, // 16-20
+            High        = 21, // 21-25
+            SystemHigh  = 26, // 26-31
+        }
+
         export type NodeRun<N extends LocalNode<any, any>> = (
             this: NodeRunConsole<N>,
             data: any,
@@ -228,11 +244,11 @@ export namespace Node {
 
         export interface NodeWillRunArgument {
             data: any;
-            controlInfo: NodeControlInfo;
+            controlInfo: ControlInfo;
             preventRunning: () => void;
         }
-        export interface NodeWillRun<N extends LocalNode<any, any>>
-            extends NodeEventHandler {
+        export interface NodeWillRunHandler<N extends LocalNode<any, any>>
+            extends EventHandler {
             (
                 this: N['proxiedNode'],
                 arg: NodeWillRunArgument,
@@ -241,14 +257,21 @@ export namespace Node {
 
         export interface NodeDidRunArgument {
             data: any;
-            controlInfo: NodeControlInfo;
+            controlInfo: ControlInfo;
         }
-        export interface NodeDidRun<N extends LocalNode<any, any>>
-            extends NodeEventHandler {
+        export interface NodeDidRunHandler<N extends LocalNode<any, any>>
+            extends EventHandler {
             (
                 this: N['proxiedNode'],
                 arg: NodeDidRunArgument,
             ): void | Promise<void>;
+        }
+
+        export interface NodeThrowErrorHandler<N extends LocalNode<any, any>>
+            extends EventHandler {
+            (this: N['proxiedNode'], fromChild: boolean, nodeError: NodeError):
+                | void
+                | boolean;
         }
     }
 }
