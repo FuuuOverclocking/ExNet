@@ -1,15 +1,10 @@
-import {
-    AnyFunction,
-    Dictionary,
-    ElementType,
-    ExNode,
-    LocalGroup,
-    Node,
-} from './types';
+import { Dictionary, ElementType, ExNode, LocalGroup, Node } from './types';
 import { Asap, It, merge, noop } from './utilities';
+import { log } from './debug';
 import { LocalDomain } from './local-domain';
 import { NodeCore } from './node-core';
 import { SubnetCore } from './subnet-core';
+import { Net } from './net';
 
 const { localCounters } = LocalDomain;
 
@@ -42,9 +37,7 @@ export class LocalNode<S, P extends object> implements Node {
                 host.n.ports.$I.input(args[0]);
             },
             get(host, prop) {
-                if (It.isPortName(prop)) {
-                    return host.n.ports.get(prop);
-                }
+                if (It.isPortName(prop)) return host.n.ports.get(prop);
                 return Reflect.get(host.n, prop);
             },
             set: (host, prop, value) => Reflect.set(host.n, prop, value),
@@ -79,6 +72,10 @@ export class LocalNode<S, P extends object> implements Node {
     public readonly groups!: LocalGroup[];
 
     /* Topology */
+    public net!: Net;
+    public get parent(): Node.ParentType {
+        return this.net.parent;
+    }
     public readonly ports!: any;
     public readonly portsState!: Node.PortsState<P>;
 
@@ -126,8 +123,51 @@ export class LocalNode<S, P extends object> implements Node {
         (this as any).nid = localCounters.allocateNodeNid();
         (this as any).groups = [];
 
+        this.net = new Net();
+        this.net.nodes.add(this);
         (this as any).ports = {}; ///////////
         (this as any).portsState = {};
+
+        core.on(
+            LocalNode.EventType.CorePortsStateChange,
+            (
+                portName: string,
+                action: Node.Event.CorePortsStateChangeAction,
+            ) => {
+                const state = core.corePortsState[portName as keyof P];
+                if (action === Node.Event.CorePortsStateChangeAction.Create) {
+                    this.portsState[portName as keyof P] = {
+                        direction: state!.direction,
+                        outerLinkNum: 0,
+                        innerLinkNum: 0,
+                    };
+                    this.emitNodePortsStateChange(
+                        portName,
+                        Node.Event.NodePortsStateChangeAction.Create,
+                    );
+                    return;
+                }
+                if (
+                    action ===
+                    Node.Event.CorePortsStateChangeAction.DetermineDirection
+                ) {
+                    this.portsState[
+                        portName as keyof P
+                    ]!.direction = state!.direction;
+                    const port = this.ports[portName as keyof P];
+                    if (port) port.setDirection(state!.direction, false);
+                    this.emitNodePortsStateChange(
+                        portName,
+                        Node.Event.NodePortsStateChangeAction
+                            .DetermineDirection,
+                    );
+                    return;
+                }
+
+                log.error(`Unexpected CorePortsStateChangeAction: ${action}`);
+                throw new Error();
+            },
+        );
 
         this.nodeRunConsolePrototypeRaw = {
             node: this.proxiedNode,
@@ -139,8 +179,10 @@ export class LocalNode<S, P extends object> implements Node {
             {
                 get(target, prop) {
                     if (prop === 'state') return target.__RawNode__.core.state;
-                    const val = Reflect.get(target, prop);
+                    let val = Reflect.get(target, prop);
                     if (val === void 0 && It.isPortName(prop)) {
+                        target.__RawNode__.ports.get(prop);
+                        val = Reflect.get(target, prop);
                         // 创建端口, { name: prop, direction: Out }
                         // 触发 NodePortsStateChange
                         // 在 nodeRunConsolePrototypeRaw 中增加 [prop]: function() {}
@@ -202,7 +244,7 @@ export class LocalNode<S, P extends object> implements Node {
                 );
             },
             (e) => {
-                me.emitNodeThrowError(false, {
+                me.onNodeThrowError(false, {
                     node: me.proxiedNode,
                     error: e,
                     stage,
@@ -237,7 +279,7 @@ export class LocalNode<S, P extends object> implements Node {
                 return (me.core as NodeCore<S, P>).onrun.call(nodeRunConsole, data);
             },
             (e) => {
-                me.emitNodeThrowError(false, {
+                me.onNodeThrowError(false, {
                     node: me.proxiedNode,
                     error: e,
                     stage,
@@ -264,7 +306,7 @@ export class LocalNode<S, P extends object> implements Node {
                 return Asap.execFunctions(handlers, me.proxiedNode, arg);
             },
             (e) => {
-                me.emitNodeThrowError(false, {
+                me.onNodeThrowError(false, {
                     node: me.proxiedNode,
                     error: e,
                     stage,
@@ -286,12 +328,7 @@ export class LocalNode<S, P extends object> implements Node {
         }
     }
 
-    // protected emitNodeWillRun(
-    //     check: () => void,
-    //     args: Node.NodeEvent.NodeWillRunArgs,
-    // ): void | Promise<void> {}
-
-    protected emitNodeThrowError(
+    protected onNodeThrowError(
         fromChild: boolean,
         nodeError: Node.NodeError,
     ): void {
@@ -322,7 +359,22 @@ export class LocalNode<S, P extends object> implements Node {
             return;
         }
 
-        LocalDomain.emitUncaughtNodeError(nodeError);
+        LocalDomain.throwUncaughtNodeError(nodeError);
+    }
+
+    private emitNodePortsStateChange(
+        portName: string,
+        action: Node.Event.NodePortsStateChangeAction,
+    ): void {
+        const handlers = this.core.eventHandlers[
+            LocalNode.EventType.NodePortsStateChange
+        ] as Node.Event.NodePortsStateChangeHandler<this>[] | undefined;
+
+        if (!handlers || !handlers.length) return;
+
+        for (const handler of handlers) {
+            handler.call(this.proxiedNode, portName, action);
+        }
     }
 }
 

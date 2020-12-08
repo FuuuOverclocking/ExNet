@@ -73,6 +73,12 @@ module.exports = {
                     error,
                     { allowArgumentsExplicitlyTypedAsAny: true },
                 ],
+                '@typescript-eslint/no-inferrable-types': [
+                    error,
+                    {
+                        ignoreProperties: true,
+                    },
+                ],
                 '@typescript-eslint/no-namespace': off,
                 '@typescript-eslint/no-non-null-assertion': off,
                 '@typescript-eslint/no-explicit-any': off,

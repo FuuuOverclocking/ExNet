@@ -1,61 +1,79 @@
+import { Node, Port } from './types';
+import { EventEmitter, merge } from './utilities';
 import { log } from './debug';
-import { AnyFunction, ElementType, LocalNode, Node } from './types';
-import { merge, nodeEventNameToType, PriorityQueue } from './utilities';
 import { LocalDomain } from './local-domain';
+import { LocalNode } from './local-node';
 
-export class NodeCore<S, P extends object> {
-    public readonly type!: ElementType.NodeCore;
+export class NodeCore<S, P extends object> extends EventEmitter<
+    Node.LocalNodeEventType<LocalNode<S, P>>
+> {
+    public readonly domain!: LocalDomain; // defined on prototype
+    public brand!: string; // defined on prototype
+    public readonly isSubnet!: false; // defined on prototype
 
     public readonly shells = new WeakSet<LocalNode<S, P>>();
+    public readonly corePortsState: Node.CorePortsState<P> = {};
 
-    public readonly domain!: LocalDomain;
-    public brand!: string;
-    public readonly isSubnet!: false;
+    public state: S;
+    public readonly onrun: Node.Event.NodeRun<LocalNode<S, P>>;
 
-    public readonly eventHandlers: Array<
-        PriorityQueue<Node.Event.EventHandler>
-    > = new Array(Node.Event.LocalNodeEventType.NumberOfEventTypes);
+    constructor(state: S, onrun: Node.Event.NodeRun<LocalNode<S, P>>) {
+        super(EventEmitter.HandlerQueueType.PriorityQueue);
 
-    constructor(
-        public state: S,
-        public readonly onrun: Node.Event.NodeRun<LocalNode<S, P>>,
-    ) {}
+        this.state = state;
+        this.onrun = onrun;
+    }
 
     public addShell(shell: LocalNode<S, P>): void {
         this.shells.add(shell);
     }
 
-    public on(event: string | number, handler: AnyFunction): void {
-        if (typeof event === 'string') {
-            event = nodeEventNameToType(event) ?? -1;
+    public setCorePortsState(
+        portName: keyof P,
+        direction: Port.Direction | undefined,
+    ): void {
+        const { corePortsState } = this;
+
+        if (!corePortsState[portName]) {
+            direction ??= Port.Direction.Unknown;
+            corePortsState[portName] = {
+                direction,
+                innerLinkNum: 0,
+            };
+            this.emit(
+                'corePortsStateChange',
+                this,
+                portName as string,
+                Node.Event.CorePortsStateChangeAction.Create,
+            );
+            return;
         }
 
-        if (
-            event === Node.Event.LocalNodeEventType.NodeWillInnerPipe ||
-            event === Node.Event.LocalNodeEventType.NodeDidInnerPipe ||
-            event === Node.Event.LocalNodeEventType.NodeDidInnerUnpipe ||
-            event < 0 ||
-            event >= Node.Event.LocalNodeEventType.NumberOfEventTypes ||
-            !Number.isInteger(event)
-        ) {
-            log.withNC.error('Invalid event type.', this, 'NodeCore.on()');
-            throw new Error();
-        }
+        const portState = corePortsState[portName]!;
+        if (direction !== void 0 && direction !== portState.direction) {
+            if (portState.direction !== Port.Direction.Unknown) {
+                log.withNC.error(
+                    `Cannot change the direction of port "${portName}" ` +
+                        `whose direction has already been determined.`,
+                    this,
+                    'NodeCore.setCorePortsState()',
+                );
+                throw new Error();
+            }
 
-        if (typeof (handler as any).priority === 'undefined') {
-            (handler as any).priority = Node.Event.EventPriority.Normal;
+            portState.direction = direction;
+            this.emit(
+                'corePortsStateChange',
+                this,
+                portName as string,
+                Node.Event.CorePortsStateChangeAction.DetermineDirection,
+            );
+            return;
         }
-        if (!this.eventHandlers[event]) {
-            this.eventHandlers[event] = new PriorityQueue();
-        }
-        this.eventHandlers[event].enqueue(
-            (handler as any) as Node.Event.EventHandler,
-        );
     }
 }
 
 merge(NodeCore.prototype, {
-    type: ElementType.NodeCore,
     domain: LocalDomain,
     brand: 'NodeCore',
     isSubnet: false,

@@ -4,30 +4,30 @@
  * then in FIFO.
  */
 export class PriorityQueue<E extends { priority: number }> extends Array<E> {
-    public enqueue(element: E): this {
+    public enqueue(element: E): void {
         let i = this.length;
         if (i === 0) {
             this.push(element);
-            return this;
+            return;
         }
         while (i--) {
             if (this[i].priority < element.priority) {
                 if (i === 0) {
                     this.unshift(element);
-                    return this;
+                    return;
                 }
                 continue;
             } else {
                 this.splice(i + 1, 0, element);
-                return this;
+                return;
             }
         }
 
         // Unreachable code, just for avoid TypeScript error.
-        return this;
+        return;
     }
 
-    public dequeue(): E | undefined {
-        return this.shift();
+    public remove(index: number): void {
+        this.splice(index, 1);
     }
 }

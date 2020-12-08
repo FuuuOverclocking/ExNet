@@ -1,9 +1,7 @@
 import type {
     getPortsOfLocalNode,
     getStateOfLocalNode,
-    extractTypeFromPortTypeDescriptor,
     Dictionary,
-    AnyFunction,
 } from './utility-types';
 export * from './utility-types';
 
@@ -16,16 +14,14 @@ export interface Domain {
 }
 
 export namespace Domain {
-    export namespace Event {
-        export const enum LocalDomainEventType {
-            UncaughtNodeError = 0,
+    export type LocalDomainEventType = {
+        uncaughtNodeError: Event.UncaughtNodeErrorHandler;
+    };
 
-            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-            NumberOfEventTypes = 1,
-        }
+    export namespace Event {
         /**
          * Event handler for uncaught node error.
-         * @returns Whether the error is caught and properly handled.
+         * @returns whether the error is caught
          */
         export type UncaughtNodeErrorHandler = (
             this: LocalDomain,
@@ -48,10 +44,7 @@ import type { RemoteGroup } from './remote-group';
 export type { LocalGroup, RemoteGroup };
 
 export const enum ElementType {
-    NodeCore,
-    SubnetCore,
     LocalNode,
-    LocalSubnet,
     RemoteNode,
     VirtualNode,
     UnknownNode,
@@ -60,10 +53,19 @@ export const enum ElementType {
     VirtualPort,
 }
 
+import type { Net } from './net';
+export type { Net };
+
+export type NetLinkOwnership =
+    | undefined
+    | {
+          group: LocalGroup;
+          domain?: RemoteDomain;
+      };
+
 // prettier-ignore
 export type NodeLikeType =
     | ElementType.LocalNode
-    | ElementType.LocalSubnet
     | ElementType.RemoteNode
     | ElementType.UnknownNode
     | ElementType.VirtualNode
@@ -72,7 +74,6 @@ export type NodeLikeType =
 // prettier-ignore
 export type NodeType =
     | ElementType.LocalNode
-    | ElementType.LocalSubnet
     | ElementType.RemoteNode
     | ElementType.UnknownNode
     ;
@@ -99,6 +100,7 @@ export type { LocalNode, LocalSubnet, RemoteNode, VirtualNode, UnknownNode };
 import type { LocalPort } from './local-port';
 import type { RemotePort } from './remote-port';
 import type { VirtualPort } from './virtual-port';
+export type { LocalPort, RemotePort, VirtualPort };
 
 // prettier-ignore
 export type ExNode<S, P extends object> =
@@ -107,10 +109,16 @@ export type ExNode<S, P extends object> =
     & { [portName in keyof P]: LocalPort<P[portName]> }
     ;
 
-export type ExPort<T = any, D = Port.PortIORole> = LocalPort<T, D>;
-
 export namespace Node {
-    export interface DefaultPorts<I, O> {
+    // prettier-ignore
+    export type ParentType =
+        | undefined
+        | null
+        | LocalNode<any, any>
+        | RemoteNode
+        ;
+
+    export interface DefaultPorts<I = any, O = any> {
         $I: I;
         $O: O;
         $E: NodeError;
@@ -119,9 +127,16 @@ export namespace Node {
 
     export type PortsState<P extends object> = {
         [portName in keyof P]?: {
-            direction: Port.PortIORole;
+            direction: Port.Direction;
             outerLinkNum: number;
             /** If node is not a subnet, it is always 0. */
+            innerLinkNum: number;
+        };
+    };
+    export type CorePortsState<P extends object> = {
+        [portName in keyof P]?: {
+            direction: Port.Direction;
+            /** If core is not a subnet core, it is always 0. */
             innerLinkNum: number;
         };
     };
@@ -169,55 +184,58 @@ export namespace Node {
         readonly __ControlInfo__: ControlInfo;
     } & {
         [portName in keyof getPortsOfLocalNode<N>]: (
-            data: extractTypeFromPortTypeDescriptor<
-                getPortsOfLocalNode<N>[portName]
-            >,
+            data: getPortsOfLocalNode<N>[portName],
         ) => void;
     };
 
     export interface Attr {
         name: string;
-        events?: Dictionary<AnyFunction>;
+        events?: Dictionary<Function>;
     }
+
+    export type LocalNodeEventType<N extends LocalNode<any, any>> = {
+        nodeWillPipe: () => void;
+        nodeDidPipe: () => void;
+        nodeDidUnpipe: () => void;
+        // nodeWillInnerPipe: () => void; // only available for subnet
+        // nodeDidInnerPipe: () => void; // only available for subnet
+        // nodeDidInnerUnpipe: () => void; // only available for subnet
+        nodeWillRun: Event.NodeWillRunHandler<N>;
+        // nodeRun: never; // event "NodeRun" should has and only has 1 handler
+        nodeDidRun: Event.NodeDidRunHandler<N>;
+        nodeWillOutput: () => void;
+        corePortsStateChange: Event.CorePortsStateChangeHandler;
+        nodePortsStateChange: Event.NodePortsStateChangeHandler<N>;
+        nodeDidBecomeChild: () => void;
+        nodeDidGetChild: () => void;
+        nodeStateChange: () => void;
+        nodeThrowError: Event.NodeThrowErrorHandler<N>;
+    };
+
+    export type LocalSubnetEventType<N extends LocalNode<any, any>> = {
+        nodeWillPipe: () => void;
+        nodeDidPipe: () => void;
+        nodeDidUnpipe: () => void;
+        // nodeWillInnerPipe: () => void; // only available for subnet
+        // nodeDidInnerPipe: () => void; // only available for subnet
+        // nodeDidInnerUnpipe: () => void; // only available for subnet
+        nodeWillRun: Event.NodeWillRunHandler<N>;
+        // nodeRun: never; // event "NodeRun" should has and only has 1 handler
+        nodeDidRun: Event.NodeDidRunHandler<N>;
+        nodeWillOutput: () => void;
+        corePortsStateChange: Event.CorePortsStateChangeHandler;
+        nodePortsStateChange: Event.NodePortsStateChangeHandler<N>;
+        nodeDidBecomeChild: () => void;
+        nodeDidGetChild: () => void;
+        nodeStateChange: () => void;
+        nodeThrowError: Event.NodeThrowErrorHandler<N>;
+    };
 
     export namespace Event {
         export interface EventHandler extends Function {
             fromAttr?: Attr;
+            originalHandler?: Function;
             priority: number;
-        }
-        export const enum LocalNodeEventType {
-            NodeWillPipe,
-            NodeDidPipe,
-            NodeDidUnpipe,
-            NodeWillInnerPipe,
-            NodeDidInnerPipe,
-            NodeDidInnerUnpipe,
-            NodeWillRun,
-            NodeRun,
-            NodeDidRun,
-            NodeWillOutput,
-            NodePortsStateChange,
-            NodeDidBecomeChild,
-            NodeDidGetChild,
-            NodeStateChange,
-            NodeThrowError,
-
-            NumberOfEventTypes = 15,
-        }
-
-        export const enum RemoteNodeEventType {
-            NodeDidPipe,
-            NodeDidUnpipe,
-            NodeDidBecomeChild,
-            NodeWillRunNotice,
-            NodeDidRunNotice,
-            NodePortsStateChange,
-            NodeStateChange,
-            NodeGoOnline,
-            NodeGoOffline,
-            RemoteError,
-
-            NumberOfEventTypes = 10,
         }
 
         // prettier-ignore
@@ -273,15 +291,54 @@ export namespace Node {
                 | void
                 | boolean;
         }
+
+        export const enum CorePortsStateChangeAction {
+            Create,
+            DetermineDirection,
+            ChangeInnerLinkNum,
+        }
+        export interface CorePortsStateChangeHandler extends EventHandler {
+            (
+                this: NodeCore<any, any> | SubnetCore<any, any>,
+                portName: string,
+                action: CorePortsStateChangeAction,
+            ): void;
+        }
+
+        export const enum NodePortsStateChangeAction {
+            Create,
+            DetermineDirection,
+            ChangeOuterLinkNum,
+            ChangeInnerLinkNum,
+        }
+        export interface NodePortsStateChangeHandler<
+            N extends LocalNode<any, any>
+        > extends EventHandler {
+            (
+                this: N['proxiedNode'],
+                portName: string,
+                action: NodePortsStateChangeAction,
+            ): void;
+        }
     }
 }
 
+export interface Port {
+    readonly type: ElementType.LocalPort | ElementType.RemotePort;
+}
+
 export namespace Port {
-    export const enum PortIORole {
+    export const enum Direction {
         // Determine the values to 0, 1 and 2 for
         // bit operation and array accessing.
         Out = 0,
         In = 1,
-        Undetermined = 2,
+        Unknown = 2,
+    }
+
+    export const enum Side {
+        // Determine the values to 0 and 1 for bit operation.
+        Outer = 0,
+        Inner = 1,
     }
 }
