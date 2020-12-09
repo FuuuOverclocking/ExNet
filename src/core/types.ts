@@ -14,7 +14,7 @@ export interface Domain {
 }
 
 export namespace Domain {
-    export type LocalDomainEventType = {
+    export type LocalDomainEvents = {
         uncaughtNodeError: Event.UncaughtNodeErrorHandler;
     };
 
@@ -44,7 +44,11 @@ import type { RemoteGroup } from './remote-group';
 export type { LocalGroup, RemoteGroup };
 
 export const enum ElementType {
-    LocalNode,
+    Net,
+    NodeCore,
+    SubnetCore,
+    PrimaryNode,
+    Subnet,
     RemoteNode,
     VirtualNode,
     UnknownNode,
@@ -63,9 +67,14 @@ export type NetLinkOwnership =
           domain?: RemoteDomain;
       };
 
+import type { NodeCore } from './node-core';
+import type { SubnetCore } from './subnet-core';
+export type { NodeCore, SubnetCore };
+
 // prettier-ignore
 export type NodeLikeType =
-    | ElementType.LocalNode
+    | ElementType.PrimaryNode
+    | ElementType.Subnet
     | ElementType.RemoteNode
     | ElementType.UnknownNode
     | ElementType.VirtualNode
@@ -73,14 +82,11 @@ export type NodeLikeType =
 
 // prettier-ignore
 export type NodeType =
-    | ElementType.LocalNode
+    | ElementType.PrimaryNode
+    | ElementType.Subnet
     | ElementType.RemoteNode
     | ElementType.UnknownNode
     ;
-
-import type { NodeCore } from './node-core';
-import type { SubnetCore } from './subnet-core';
-export type { NodeCore, SubnetCore };
 
 export interface NodeLike {
     readonly type: NodeLikeType;
@@ -91,20 +97,37 @@ export interface Node extends NodeLike {
 }
 
 import type { LocalNode } from './local-node';
-import type { LocalSubnet } from './local-subnet';
+import type { PrimaryNode } from './primary-node';
+import type { Subnet } from './subnet';
 import type { RemoteNode } from './remote-node';
 import type { VirtualNode } from './virtual-node';
 import type { UnknownNode } from './unknown-node';
-export type { LocalNode, LocalSubnet, RemoteNode, VirtualNode, UnknownNode };
+export type {
+    LocalNode,
+    PrimaryNode,
+    Subnet,
+    RemoteNode,
+    VirtualNode,
+    UnknownNode,
+};
 
-import type { LocalPort } from './local-port';
-import type { RemotePort } from './remote-port';
-import type { VirtualPort } from './virtual-port';
-export type { LocalPort, RemotePort, VirtualPort };
+// prettier-ignore
+export type ProxiedNode<N> = N extends LocalNode<any, infer P>
+    ? & N
+      & { (data: any): void | Promise<void> }
+      & { [portName in keyof P]: LocalPort<P[portName]> }
+    : never;
 
 // prettier-ignore
 export type ExNode<S, P extends object> =
-    & LocalNode<S, P>
+    & PrimaryNode<S, P>
+    & { (data: any): void | Promise<void> }
+    & { [portName in keyof P]: LocalPort<P[portName]> }
+    ;
+
+// prettier-ignore
+export type ExSubnet<S, P extends object> =
+    & Subnet<S, P>
     & { (data: any): void | Promise<void> }
     & { [portName in keyof P]: LocalPort<P[portName]> }
     ;
@@ -114,7 +137,7 @@ export namespace Node {
     export type ParentType =
         | undefined
         | null
-        | LocalNode<any, any>
+        | Subnet<any, any>
         | RemoteNode
         ;
 
@@ -125,18 +148,19 @@ export namespace Node {
         [portName: string]: any;
     }
 
+    export type CorePortsState<P extends object> = {
+        [portName in keyof P]?: {
+            direction: Port.Direction;
+            /** If core is not a subnet core, it is always 0. */
+            innerLinkNum: number;
+        };
+    };
+
     export type PortsState<P extends object> = {
         [portName in keyof P]?: {
             direction: Port.Direction;
             outerLinkNum: number;
             /** If node is not a subnet, it is always 0. */
-            innerLinkNum: number;
-        };
-    };
-    export type CorePortsState<P extends object> = {
-        [portName in keyof P]?: {
-            direction: Port.Direction;
-            /** If core is not a subnet core, it is always 0. */
             innerLinkNum: number;
         };
     };
@@ -157,17 +181,17 @@ export namespace Node {
         node: Node;
         error: Error;
         stage: WorkingStage;
-        // dataSnapshot: any;
+        data: any;
         controlInfo: ControlInfo;
     }
 
     export interface ControlInfo {
-        port: Port;
+        port?: Port;
         runStack?: any;
     }
 
     export type NodeRunConsole<N extends LocalNode<any, any>> = {
-        readonly node: N['proxiedNode'];
+        readonly node: N['surfaceNode'];
         state: getStateOfLocalNode<N>;
         readonly entry: {
             readonly name: string;
@@ -193,7 +217,7 @@ export namespace Node {
         events?: Dictionary<Function>;
     }
 
-    export type LocalNodeEventType<N extends LocalNode<any, any>> = {
+    export type PrimaryNodeEvents<N extends PrimaryNode<any, any>> = {
         nodeWillPipe: () => void;
         nodeDidPipe: () => void;
         nodeDidUnpipe: () => void;
@@ -212,7 +236,11 @@ export namespace Node {
         nodeThrowError: Event.NodeThrowErrorHandler<N>;
     };
 
-    export type LocalSubnetEventType<N extends LocalNode<any, any>> = {
+    export type SubnetDefine<S, P extends object> = (
+        this: SubnetCore<S, P>,
+    ) => void;
+
+    export type SubnetEvents<N extends Subnet<any, any>> = {
         nodeWillPipe: () => void;
         nodeDidPipe: () => void;
         nodeDidUnpipe: () => void;
@@ -234,7 +262,6 @@ export namespace Node {
     export namespace Event {
         export interface EventHandler extends Function {
             fromAttr?: Attr;
-            originalHandler?: Function;
             priority: number;
         }
 
@@ -249,12 +276,12 @@ export namespace Node {
             SystemHigh  = 26, // 26-31
         }
 
-        export type NodeRun<N extends LocalNode<any, any>> = (
+        export type PrimaryNodeRun<N extends PrimaryNode<any, any>> = (
             this: NodeRunConsole<N>,
             data: any,
         ) => void | Promise<void>;
 
-        export type SubnetRun<N extends LocalNode<any, any>> = (
+        export type SubnetRun<N extends Subnet<any, any>> = (
             this: NodeRunConsole<N>,
             data: any,
             runNet: () => void,
@@ -268,7 +295,7 @@ export namespace Node {
         export interface NodeWillRunHandler<N extends LocalNode<any, any>>
             extends EventHandler {
             (
-                this: N['proxiedNode'],
+                this: N['surfaceNode'],
                 arg: NodeWillRunArgument,
             ): void | Promise<void>;
         }
@@ -280,14 +307,14 @@ export namespace Node {
         export interface NodeDidRunHandler<N extends LocalNode<any, any>>
             extends EventHandler {
             (
-                this: N['proxiedNode'],
+                this: N['surfaceNode'],
                 arg: NodeDidRunArgument,
             ): void | Promise<void>;
         }
 
         export interface NodeThrowErrorHandler<N extends LocalNode<any, any>>
             extends EventHandler {
-            (this: N['proxiedNode'], fromChild: boolean, nodeError: NodeError):
+            (this: N['surfaceNode'], fromChild: boolean, nodeError: NodeError):
                 | void
                 | boolean;
         }
@@ -315,7 +342,7 @@ export namespace Node {
             N extends LocalNode<any, any>
         > extends EventHandler {
             (
-                this: N['proxiedNode'],
+                this: N['surfaceNode'],
                 portName: string,
                 action: NodePortsStateChangeAction,
             ): void;
@@ -323,9 +350,35 @@ export namespace Node {
     }
 }
 
-export interface Port {
-    readonly type: ElementType.LocalPort | ElementType.RemotePort;
+// prettier-ignore
+export type PortLikeType =
+    | ElementType.LocalPort
+    | ElementType.RemotePort
+    | ElementType.VirtualPort
+    ;
+
+// prettier-ignore
+export type PortType =
+    | ElementType.LocalPort
+    | ElementType.RemotePort
+    ;
+
+export interface PortLike {
+    readonly type: PortLikeType;
 }
+
+export interface Port extends PortLike {
+    readonly type: PortType;
+    readonly name: string;
+}
+
+import type { LocalPort } from './local-port';
+import type { RemotePort } from './remote-port';
+import type { VirtualPort } from './virtual-port';
+export type { LocalPort, RemotePort, VirtualPort };
+
+import type { LocalPortSet, ExLocalPortSet } from './local-port-set';
+export type { LocalPortSet, ExLocalPortSet };
 
 export namespace Port {
     export const enum Direction {

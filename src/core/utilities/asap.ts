@@ -101,7 +101,7 @@ export class Asap {
         F extends (...args: any[]) => void | Promise<void>
     >(
         check: () => boolean,
-        functions: F[],
+        functions: readonly F[],
         thisArg: ThisParameterType<F>,
         ...args: Parameters<F>
     ): void | Promise<void> {

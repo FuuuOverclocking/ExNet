@@ -6,7 +6,7 @@ import {
 } from './types';
 export { LogLevel, LogService, LoggableObject, MessageWithNodeAndComponent };
 import { CLILogService } from './cli-log-service';
-import type { Node, NodeCore, SubnetCore } from '../types';
+import type { Node, NodeCore, SubnetCore } from 'core/types';
 
 const logServices: LogService[] = [];
 let currentLogLevel = LogLevel.Info;

@@ -1,20 +1,11 @@
-import { AnyFunction, Dictionary } from '../utility-types';
+import type { AnyFunction, Dictionary } from 'core/utility-types';
 import { ArrayQueue } from './array-queue';
 import { PriorityQueue } from './priority-queue';
 
 export namespace EventEmitter {
-    export interface HandlerQueue<F extends AnyFunction> {
+    export interface HandlerQueue<F extends AnyFunction> extends Array<F> {
         enqueue(handler: F): void;
-        indexOf(handler: F): number;
         remove(index: number): void;
-        length: number;
-        [Symbol.iterator](): {
-            next(): {
-                value: F;
-                done: boolean;
-            };
-        };
-        [i: number]: F;
     }
     export const enum HandlerQueueType {
         ArrayQueue,

@@ -45,7 +45,7 @@ export class LocalPort<T> {
         core.setCorePortsState(name, this.direction);
     }
 
-    private setDirection(dir: Port.Direction, notifyCore = true): void {
+    public setDirection(dir: Port.Direction, notifyCore = true): void {
         dir = this.checkOrResolveDirection(dir);
 
         if (dir === this.direction) return;
@@ -95,7 +95,7 @@ export class LocalPort<T> {
         if (direction !== Port.Direction.Unknown && direction !== dir) {
             log.withNC.error(
                 `Cannot change the direction of port "${name}" ` +
-                    `whose direction has already been determined.`,
+                    `as its direction has already been determined.`,
                 this.node || this.core,
             );
             throw new Error();

@@ -1,4 +1,4 @@
-import { ElementType, NodeCore, SubnetCore } from '../types';
+import { ElementType, NodeCore, SubnetCore } from 'core/types';
 
 export namespace It {
     export function isCore(

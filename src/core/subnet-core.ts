@@ -1,29 +1,44 @@
-import { LocalSubnet, Node, Port } from './types';
+import { ElementType, Node, Port, Subnet } from './types';
 import { EventEmitter, merge } from './utilities';
 import { log } from './debug';
 import { LocalDomain } from './local-domain';
+import { Net } from './net';
+import { ExLocalPortSet, LocalPortSet } from './local-port-set';
 
 export class SubnetCore<S, P extends object> extends EventEmitter<
-    Node.LocalSubnetEventType<LocalSubnet<S, P>>
+    Node.SubnetEvents<Subnet<S, P>>
 > {
+    public readonly type!: ElementType.SubnetCore; // defined on prototype
     public readonly domain!: LocalDomain; // defined on prototype
     public brand!: string; // defined on prototype
-    public readonly isSubnet!: true; // defined on prototype
 
-    public readonly shells = new WeakSet<LocalSubnet<S, P>>();
+    public readonly shells = new WeakSet<Subnet<S, P>>();
     public readonly corePortsState: Node.CorePortsState<P> = {};
 
     public state: S;
-    public readonly onrun: Node.Event.SubnetRun<LocalSubnet<S, P>>;
+    public readonly onrun: Node.Event.SubnetRun<Subnet<S, P>>;
 
-    constructor(state: S, onrun: Node.Event.SubnetRun<LocalSubnet<S, P>>) {
+    constructor(
+        state: S,
+        define: Node.SubnetDefine<S, P>,
+        onrun?: Node.Event.SubnetRun<Subnet<S, P>>,
+    ) {
         super(EventEmitter.HandlerQueueType.PriorityQueue);
 
         this.state = state;
-        this.onrun = onrun;
+        // define (...)
+        this.onrun = onrun || ((data, runNet) => runNet());
     }
 
-    public addShell(shell: LocalSubnet<S, P>): void {
+    public readonly subnet = new Net();
+    public readonly children = this.subnet.nodes;
+    public readonly innerPorts: ExLocalPortSet<P> = new LocalPortSet(
+        Port.Side.Inner,
+        this,
+        void 0,
+    ) as any;
+
+    public addShell(shell: Subnet<S, P>): void {
         this.shells.add(shell);
     }
 
@@ -55,7 +70,7 @@ export class SubnetCore<S, P extends object> extends EventEmitter<
             if (portState.direction !== Port.Direction.Unknown) {
                 log.withNC.error(
                     `Cannot change the direction of port "${portName}" ` +
-                        `whose direction has already been determined.`,
+                        `as its direction has already been determined.`,
                     this,
                     'NodeCore.setCorePortsState()',
                 );
@@ -82,14 +97,13 @@ export class SubnetCore<S, P extends object> extends EventEmitter<
                 portName as string,
                 Node.Event.CorePortsStateChangeAction.ChangeInnerLinkNum,
             );
-
             return;
         }
     }
 }
 
 merge(SubnetCore.prototype, {
+    type: ElementType.SubnetCore,
     domain: LocalDomain,
     brand: 'SubnetCore',
-    isSubnet: true,
 });

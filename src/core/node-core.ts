@@ -1,30 +1,29 @@
-import { Node, Port } from './types';
+import { Node, PrimaryNode, Port, ElementType } from './types';
 import { EventEmitter, merge } from './utilities';
 import { log } from './debug';
 import { LocalDomain } from './local-domain';
-import { LocalNode } from './local-node';
 
 export class NodeCore<S, P extends object> extends EventEmitter<
-    Node.LocalNodeEventType<LocalNode<S, P>>
+    Node.PrimaryNodeEvents<PrimaryNode<S, P>>
 > {
+    public readonly type!: ElementType.NodeCore; // defined on prototype
     public readonly domain!: LocalDomain; // defined on prototype
     public brand!: string; // defined on prototype
-    public readonly isSubnet!: false; // defined on prototype
 
-    public readonly shells = new WeakSet<LocalNode<S, P>>();
+    public readonly shells = new WeakSet<PrimaryNode<S, P>>();
     public readonly corePortsState: Node.CorePortsState<P> = {};
 
     public state: S;
-    public readonly onrun: Node.Event.NodeRun<LocalNode<S, P>>;
+    public readonly onrun: Node.Event.PrimaryNodeRun<PrimaryNode<S, P>>;
 
-    constructor(state: S, onrun: Node.Event.NodeRun<LocalNode<S, P>>) {
+    constructor(state: S, onrun: Node.Event.PrimaryNodeRun<PrimaryNode<S, P>>) {
         super(EventEmitter.HandlerQueueType.PriorityQueue);
 
         this.state = state;
         this.onrun = onrun;
     }
 
-    public addShell(shell: LocalNode<S, P>): void {
+    public addShell(shell: PrimaryNode<S, P>): void {
         this.shells.add(shell);
     }
 
@@ -54,7 +53,7 @@ export class NodeCore<S, P extends object> extends EventEmitter<
             if (portState.direction !== Port.Direction.Unknown) {
                 log.withNC.error(
                     `Cannot change the direction of port "${portName}" ` +
-                        `whose direction has already been determined.`,
+                        `as its direction has already been determined.`,
                     this,
                     'NodeCore.setCorePortsState()',
                 );
@@ -74,7 +73,7 @@ export class NodeCore<S, P extends object> extends EventEmitter<
 }
 
 merge(NodeCore.prototype, {
+    type: ElementType.NodeCore,
     domain: LocalDomain,
-    brand: 'NodeCore',
-    isSubnet: false,
+    brand: 'ExNode',
 });

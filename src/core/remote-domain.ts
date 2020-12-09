@@ -10,7 +10,3 @@ export class RemoteDomain implements Domain {
         public readonly runID: string,
     ) {}
 }
-
-export const enum RemoteDomainEventType {
-    NumberOfEventTypes = 0,
-}

@@ -12,11 +12,13 @@
         ],                                        /* Specify library files to be included in the compilation. */
         "declaration": true,                      /* Generates corresponding '.d.ts' file. */
         "sourceMap": true,                        /* Generates corresponding '.map' file. */
-        "outDir": "../build/tscjs",                /* Redirect output structure to the directory. */
+        "outDir": "../build/tscjs",               /* Redirect output structure to the directory. */
         "importHelpers": true,                    /* Import emit helpers from 'tslib'. */
 
+        /* Module Resolution Options */
+        "baseUrl": "./",                          /* Base directory to resolve non-absolute module names. */
+
         /* Source Map Options */
-        // "sourceRoot": "../src",                /* Specify the location where debugger should locate TypeScript files instead of source locations. */
         "inlineSources": true,                    /* Emit the source alongside the sourcemaps within a single file; requires '--inlineSourceMap' or '--sourceMap' to be set. */
     },
     "include": [

@@ -11,7 +11,7 @@ import { log } from './debug';
 type MonitorType = undefined | typeof import('../monitor').monitor;
 
 export class LocalDomainClass
-    extends EventEmitter<Domain.LocalDomainEventType>
+    extends EventEmitter<Domain.LocalDomainEvents>
     implements Domain {
     /** Domain ID uniquely identifies a domain among interconnected domains. */
     public readonly id: string = cuuid(8);
@@ -71,6 +71,7 @@ export const LocalDomain = new LocalDomainClass();
 export type LocalDomain = typeof LocalDomain;
 
 export let monitor: MonitorType = void 0;
+export const localCounters = LocalDomain.localCounters;
 
 export function setMonitor(mon: MonitorType): void {
     LocalDomain.monitor = monitor = mon;

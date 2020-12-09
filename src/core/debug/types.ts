@@ -1,4 +1,4 @@
-import type { Node, NodeCore, SubnetCore } from '../types';
+import type { Node, NodeCore, SubnetCore } from 'core/types';
 
 export const enum LogLevel {
     Off = 0,
