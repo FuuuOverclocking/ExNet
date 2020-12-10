@@ -1,5 +1,4 @@
-const hasNativeBigInt =
-    typeof BigInt !== 'undefined' && typeof BigInt(0) === 'bigint';
+const hasNativeBigInt = typeof BigInt !== 'undefined' && typeof BigInt(0) === 'bigint';
 const maxSafeInt = 9007199254740991;
 
 /**

@@ -11,11 +11,7 @@ export function merge<T, U>(target: T, source: U): T & U {
     return target as T & U;
 }
 
-export function mergeTwo<T, U, V>(
-    target: T,
-    source1: U,
-    source2: V,
-): T & U & V {
+export function mergeTwo<T, U, V>(target: T, source1: U, source2: V): T & U & V {
     const keys1 = Object.keys(source1);
     const len1 = keys1.length;
     for (let i = 0; i < len1; ++i) {

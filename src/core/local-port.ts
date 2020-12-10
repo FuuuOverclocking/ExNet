@@ -1,18 +1,8 @@
-import {
-    ElementType,
-    LocalNode,
-    Node,
-    NodeCore,
-    Port,
-    SubnetCore,
-} from './types';
+import { ElementType, LocalNode, Node, NodeCore, Port, SubnetCore } from './types';
 import { merge } from './utilities';
 import { log } from './debug';
 
-function getTransferDirection(
-    dir: Port.Direction,
-    side: Port.Side,
-): Port.Direction {
+function getTransferDirection(dir: Port.Direction, side: Port.Side): Port.Direction {
     return dir === Port.Direction.Unknown ? Port.Direction.Unknown : side ^ dir;
 }
 
@@ -79,11 +69,7 @@ export class LocalPort<T> {
         }
 
         const coreDir = core.corePortsState[name]?.direction;
-        if (
-            coreDir !== void 0 &&
-            coreDir !== Port.Direction.Unknown &&
-            dir !== coreDir
-        ) {
+        if (coreDir !== void 0 && coreDir !== Port.Direction.Unknown && dir !== coreDir) {
             log.withNC.error(
                 `The direction of port "${name}" is different` +
                     ` from the port state of the node core.`,

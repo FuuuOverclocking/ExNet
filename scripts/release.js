@@ -31,13 +31,8 @@ async function main() {
 
     echo('Current version: v' + getExNetVersion());
 
-    const version = await askAndCheck('Enter new version: v', (ver) =>
-        /^\d+\.\d+\.\d+$/.test(ver),
-    );
-    const sure = await askYesOrNo(
-        `Releasing v${black.bgWhite(version)} - are you sure?`,
-        'n',
-    );
+    const version = await askAndCheck('Enter new version: v', (ver) => /^\d+\.\d+\.\d+$/.test(ver));
+    const sure = await askYesOrNo(`Releasing v${black.bgWhite(version)} - are you sure?`, 'n');
     if (!sure) {
         echo('Release cancelled.');
         return;
@@ -83,10 +78,7 @@ async function main() {
     const npmRegistry =
         ' --metrics-registry "https://registry.npmjs.org/"' +
         ' --registry "https://registry.npmjs.org/"';
-    const hasLoggedIn = await askYesOrNo(
-        cyan('Have you logged in to NPM?'),
-        'y',
-    );
+    const hasLoggedIn = await askYesOrNo(cyan('Have you logged in to NPM?'), 'y');
     if (!hasLoggedIn) {
         echo(chalk.bgYellowBright.black('$ npm login'));
         await exec('npm login' + npmRegistry);
@@ -104,9 +96,7 @@ function bumpVersionInPackageJson(version) {
     const reg = /\n {4}"version": "\d+\.\d+\.\d+",\n/g;
     const countMatch = ((text || '').match(reg) || []).length;
     if (countMatch !== 1) {
-        throw new Error(
-            'package.json must be UTF-8, LF line-ending, 4-spaces-indented.',
-        );
+        throw new Error('package.json must be UTF-8, LF line-ending, 4-spaces-indented.');
     }
     text = text.replace(reg, '\n    "version": "' + version + '",\n');
     fs.writeFileSync(paths.get('./package.json'), text, {

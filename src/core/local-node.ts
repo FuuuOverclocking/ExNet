@@ -1,11 +1,4 @@
-import {
-    ElementType,
-    ExLocalPortSet,
-    LocalDomain,
-    LocalGroup,
-    Net,
-    Node,
-} from './types';
+import { ElementType, ExLocalPortSet, LocalDomain, LocalGroup, Net, Node } from './types';
 import { It } from './utilities';
 
 export interface LocalNode<S, P extends object> extends Node {
@@ -50,8 +43,7 @@ export namespace LocalNode {
             },
             set: (host, prop, value) => Reflect.set(host.n, prop, value),
             has: (host, prop) => Reflect.has(host.n, prop),
-            deleteProperty: (host, prop) =>
-                Reflect.deleteProperty(host.n, prop),
+            deleteProperty: (host, prop) => Reflect.deleteProperty(host.n, prop),
             ownKeys: (host) => Reflect.ownKeys(host.n),
             getOwnPropertyDescriptor: (host, prop) =>
                 Reflect.getOwnPropertyDescriptor(host.n, prop),

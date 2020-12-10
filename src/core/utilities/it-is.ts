@@ -1,13 +1,9 @@
 import { ElementType, NodeCore, SubnetCore } from 'core/types';
 
 export namespace It {
-    export function isCore(
-        value: any,
-    ): value is NodeCore<any, any> | SubnetCore<any, any> {
+    export function isCore(value: any): value is NodeCore<any, any> | SubnetCore<any, any> {
         return (
-            value &&
-            (value.type === ElementType.NodeCore ||
-                value.type === ElementType.SubnetCore)
+            value && (value.type === ElementType.NodeCore || value.type === ElementType.SubnetCore)
         );
     }
     export function isNodeCore(value: any): value is NodeCore<any, any> {
@@ -22,8 +18,6 @@ export namespace It {
     }
 
     export function isPortName(value: any): value is string {
-        return (
-            typeof value === 'string' && value[0] === '$' && value.length !== 1
-        );
+        return typeof value === 'string' && value[0] === '$' && value.length !== 1;
     }
 }

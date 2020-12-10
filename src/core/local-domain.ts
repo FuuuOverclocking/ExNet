@@ -1,18 +1,10 @@
-import type {
-    Domain,
-    RemoteDomain,
-    LocalGroup,
-    RemoteGroup,
-    Node,
-} from './types';
+import type { Domain, RemoteDomain, LocalGroup, RemoteGroup, Node } from './types';
 import { cuuid, EventEmitter, TinyBigInt } from './utilities';
 import { log } from './debug';
 
 type MonitorType = undefined | typeof import('../monitor').monitor;
 
-export class LocalDomainClass
-    extends EventEmitter<Domain.LocalDomainEvents>
-    implements Domain {
+export class LocalDomainClass extends EventEmitter<Domain.LocalDomainEvents> implements Domain {
     /** Domain ID uniquely identifies a domain among interconnected domains. */
     public readonly id: string = cuuid(8);
     /** Every time the program re-runs, `runID` is randomly generated. */

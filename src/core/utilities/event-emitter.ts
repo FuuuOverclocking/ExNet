@@ -18,8 +18,8 @@ export class EventEmitter<E extends Dictionary<AnyFunction>> {
         [event in keyof E]?: EventEmitter.HandlerQueue<E[event]>;
     } = {};
     constructor(
-        private readonly queueType: EventEmitter.HandlerQueueType = EventEmitter
-            .HandlerQueueType.ArrayQueue,
+        private readonly queueType: EventEmitter.HandlerQueueType = EventEmitter.HandlerQueueType
+            .ArrayQueue,
     ) {}
 
     private getHandlerQueue(): EventEmitter.HandlerQueue<any> {

@@ -3,14 +3,7 @@ const moment = require('moment');
 const chalk = require('chalk');
 const { bold, cyan, black } = chalk;
 const globby = require('globby');
-const {
-    cliArgs,
-    paths,
-    echo,
-    getExNetVersion,
-    execSilently,
-    getPromise,
-} = require('./utilities');
+const { cliArgs, paths, echo, getExNetVersion, execSilently, getPromise } = require('./utilities');
 require('draftlog').into(console);
 
 process.on('unhandledRejection', (reason) => {
@@ -196,42 +189,27 @@ build.tasks = (() => {
                 await Promise.all([
                     // dev-esm
                     fs.copy('./build/tsesm/attrs', './build/dev-esm/attrs'),
-                    fs.copy(
-                        './build/tsesm/connectors',
-                        './build/dev-esm/connectors',
-                    ),
+                    fs.copy('./build/tsesm/connectors', './build/dev-esm/connectors'),
                     fs.copy('./build/tsesm/nodes', './build/dev-esm/nodes'),
                     // prod-esm
                     fs.copy('./build/tsesm/attrs', './build/prod-esm/attrs'),
-                    fs.copy(
-                        './build/tsesm/connectors',
-                        './build/prod-esm/connectors',
-                    ),
+                    fs.copy('./build/tsesm/connectors', './build/prod-esm/connectors'),
                     fs.copy('./build/tsesm/nodes', './build/prod-esm/nodes'),
                 ]);
-                draft(
-                    '❯ ✔️ Copy components from tsesm/ to dev-esm/ and prod-esm/.',
-                );
+                draft('❯ ✔️ Copy components from tsesm/ to dev-esm/ and prod-esm/.');
                 build.onTaskFinish();
             } catch (e) {
-                draft(
-                    '❯ ❌ Copy components from tsesm/ to dev-esm/ and prod-esm/.',
-                );
+                draft('❯ ❌ Copy components from tsesm/ to dev-esm/ and prod-esm/.');
                 throw new Error(e);
             }
         },
         async copyCompsFromTscjs() {
-            const draft = console.draft(
-                '❯ ⌛ Copy components from tscjs/ to cjs/.',
-            );
+            const draft = console.draft('❯ ⌛ Copy components from tscjs/ to cjs/.');
 
             try {
                 await Promise.all([
                     fs.copy('./build/tsesm/attrs', './build/cjs/attrs'),
-                    fs.copy(
-                        './build/tsesm/connectors',
-                        './build/cjs/connectors',
-                    ),
+                    fs.copy('./build/tsesm/connectors', './build/cjs/connectors'),
                     fs.copy('./build/tsesm/nodes', './build/cjs/nodes'),
                 ]);
                 draft('❯ ✔️ Copy components from tscjs/ to cjs/.');
@@ -242,10 +220,7 @@ build.tasks = (() => {
             }
         },
         async copyAutoCJS() {
-            const content = await fs.readFile(
-                './src/exnet.auto.cjs.js',
-                'utf8',
-            );
+            const content = await fs.readFile('./src/exnet.auto.cjs.js', 'utf8');
 
             const banner = (() => {
                 const version = require('../package.json').version;
@@ -264,50 +239,27 @@ build.tasks = (() => {
             build.onTaskFinish();
         },
         async copyDtsFromTsesm() {
-            const draft = console.draft(
-                '❯ ⌛ Copy dts from tsesm/ to cjs/, dev-esm/, prod-esm/.',
-            );
+            const draft = console.draft('❯ ⌛ Copy dts from tsesm/ to cjs/, dev-esm/, prod-esm/.');
             try {
                 const dtsPaths = [
                     ['./build/tsesm/exnet.dev.d.ts', './build/cjs/exnet.d.ts'],
-                    [
-                        './build/tsesm/exnet.dev.d.ts',
-                        './build/dev-esm/exnet.d.ts',
-                    ],
-                    [
-                        './build/tsesm/exnet.dev.d.ts',
-                        './build/prod-esm/exnet.d.ts',
-                    ],
+                    ['./build/tsesm/exnet.dev.d.ts', './build/dev-esm/exnet.d.ts'],
+                    ['./build/tsesm/exnet.dev.d.ts', './build/prod-esm/exnet.d.ts'],
                 ];
                 (await globby('./build/tsesm/core/**/*.d.ts')).map((path) => {
-                    const cjsDest = path.replace(
-                        './build/tsesm',
-                        './build/cjs',
-                    );
-                    const devesmDest = path.replace(
-                        './build/tsesm',
-                        './build/dev-esm',
-                    );
-                    const prodesmDest = path.replace(
-                        './build/tsesm',
-                        './build/prod-esm',
-                    );
+                    const cjsDest = path.replace('./build/tsesm', './build/cjs');
+                    const devesmDest = path.replace('./build/tsesm', './build/dev-esm');
+                    const prodesmDest = path.replace('./build/tsesm', './build/prod-esm');
                     dtsPaths.push([path, cjsDest]);
                     dtsPaths.push([path, devesmDest]);
                     dtsPaths.push([path, prodesmDest]);
                 });
 
-                await Promise.all(
-                    dtsPaths.map(([src, dest]) => fs.copy(src, dest)),
-                );
-                draft(
-                    '❯ ✔️ Copy dts from tsesm/ to cjs/, dev-esm/, prod-esm/.',
-                );
+                await Promise.all(dtsPaths.map(([src, dest]) => fs.copy(src, dest)));
+                draft('❯ ✔️ Copy dts from tsesm/ to cjs/, dev-esm/, prod-esm/.');
                 build.onTaskFinish();
             } catch (e) {
-                draft(
-                    '❯ ❌ Copy dts from tsesm/ to cjs/, dev-esm/, prod-esm/.',
-                );
+                draft('❯ ❌ Copy dts from tsesm/ to cjs/, dev-esm/, prod-esm/.');
                 throw new Error(e);
             }
         },
@@ -347,32 +299,19 @@ build.tasks = (() => {
                 `        exnet: 'exnet/prod-esm'\n` +
                 `    };\n` +
                 `};\n`;
-            fs.writeFileSync(
-                './release/dev-esm/path-mapping.js',
-                devPathMapping,
-            );
-            fs.writeFileSync(
-                './release/prod-esm/path-mapping.js',
-                prodPathMapping,
-            );
+            fs.writeFileSync('./release/dev-esm/path-mapping.js', devPathMapping);
+            fs.writeFileSync('./release/prod-esm/path-mapping.js', prodPathMapping);
             echo('❯ ✔️ Generate path-mapping.js .');
             build.onTaskFinish();
         },
         async correctMapSources() {
-            const draft = console.draft(
-                '❯ ⌛ Correct the "sources" filed of *.js.map .',
-            );
+            const draft = console.draft('❯ ⌛ Correct the "sources" filed of *.js.map .');
             try {
                 const mapFilePaths = await globby('./release/**/*.js.map');
                 const promises = mapFilePaths.map(async (mapPath) => {
                     const json = await fs.readJSON(mapPath);
-                    if (
-                        typeof json.sourceRoot === 'string' &&
-                        json.sourceRoot !== ''
-                    ) {
-                        throw new Error(
-                            mapPath + ': "sourceRoot" is not empty.',
-                        );
+                    if (typeof json.sourceRoot === 'string' && json.sourceRoot !== '') {
+                        throw new Error(mapPath + ': "sourceRoot" is not empty.');
                     }
                     const depth = mapPath.split('/').length - 3;
                     json.sources = json.sources.map((str) => {
@@ -408,9 +347,7 @@ build.prompt = {
 
         function getStatus() {
             const seconds = Math.floor((Date.now() - build.timeBegin) / 1000);
-            return bold(
-                `${seconds}s elapsed. ${build.tasksLeft} task(s) left.`,
-            );
+            return bold(`${seconds}s elapsed. ${build.tasksLeft} task(s) left.`);
         }
 
         const dots = '⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'.split('');

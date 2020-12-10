@@ -64,15 +64,9 @@ exports.askAndCheck = askAndCheck;
 
 async function askYesOrNo(message, defaultAnswer) {
     defaultAnswer =
-        typeof defaultAnswer === 'string'
-            ? defaultAnswer.toLowerCase() === 'y'
-            : defaultAnswer;
+        typeof defaultAnswer === 'string' ? defaultAnswer.toLowerCase() === 'y' : defaultAnswer;
     const postfix =
-        typeof defaultAnswer === 'undefined'
-            ? ' [y/n] '
-            : defaultAnswer
-            ? ' [Y/n] '
-            : ' [y/N] ';
+        typeof defaultAnswer === 'undefined' ? ' [y/n] ' : defaultAnswer ? ' [Y/n] ' : ' [y/N] ';
     message += postfix;
 
     // eslint-disable-next-line no-constant-condition
@@ -125,28 +119,20 @@ function execSilently(command, saveOutputAs) {
             stdout,
         };
         if (typeof saveOutputAs === 'string') {
-            const hasStdout =
-                typeof stdout === 'string' ? !!stdout.trim() : !!stdout;
-            const hasStderr =
-                typeof stderr === 'string' ? !!stderr.trim() : !!stderr;
+            const hasStdout = typeof stdout === 'string' ? !!stdout.trim() : !!stdout;
+            const hasStderr = typeof stderr === 'string' ? !!stderr.trim() : !!stderr;
             const logs = [];
             if (hasStdout) {
-                const filename = hasStderr
-                    ? saveOutputAs + '.stdout.log'
-                    : saveOutputAs + '.log';
+                const filename = hasStderr ? saveOutputAs + '.stdout.log' : saveOutputAs + '.log';
                 fs.outputFileSync(filename, stripAnsi(stdout), {
                     encoding: 'utf8',
                 });
                 logs.push(filename);
             }
             if (hasStderr) {
-                fs.outputFileSync(
-                    saveOutputAs + '.stderr.log',
-                    stripAnsi(stderr),
-                    {
-                        encoding: 'utf8',
-                    },
-                );
+                fs.outputFileSync(saveOutputAs + '.stderr.log', stripAnsi(stderr), {
+                    encoding: 'utf8',
+                });
                 logs.push(saveOutputAs + '.stderr.log');
             }
             result.logs = logs;

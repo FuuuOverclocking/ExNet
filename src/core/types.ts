@@ -1,8 +1,4 @@
-import type {
-    getPortsOfLocalNode,
-    getStateOfLocalNode,
-    Dictionary,
-} from './utility-types';
+import type { getPortsOfLocalNode, getStateOfLocalNode, Dictionary } from './utility-types';
 export * from './utility-types';
 
 export interface Domain {
@@ -102,14 +98,7 @@ import type { Subnet } from './subnet';
 import type { RemoteNode } from './remote-node';
 import type { VirtualNode } from './virtual-node';
 import type { UnknownNode } from './unknown-node';
-export type {
-    LocalNode,
-    PrimaryNode,
-    Subnet,
-    RemoteNode,
-    VirtualNode,
-    UnknownNode,
-};
+export type { LocalNode, PrimaryNode, Subnet, RemoteNode, VirtualNode, UnknownNode };
 
 // prettier-ignore
 export type ProxiedNode<N> = N extends LocalNode<any, infer P>
@@ -197,9 +186,7 @@ export namespace Node {
             readonly name: string;
             is(portName: string): boolean;
         } & {
-            readonly [portName in keyof getPortsOfLocalNode<N>]:
-                | true
-                | undefined;
+            readonly [portName in keyof getPortsOfLocalNode<N>]: true | undefined;
         };
 
         /** @internal */
@@ -236,9 +223,7 @@ export namespace Node {
         nodeThrowError: Event.NodeThrowErrorHandler<N>;
     };
 
-    export type SubnetDefine<S, P extends object> = (
-        this: SubnetCore<S, P>,
-    ) => void;
+    export type SubnetDefine<S, P extends object> = (this: SubnetCore<S, P>) => void;
 
     export type SubnetEvents<N extends Subnet<any, any>> = {
         nodeWillPipe: () => void;
@@ -292,31 +277,20 @@ export namespace Node {
             controlInfo: ControlInfo;
             preventRunning: () => void;
         }
-        export interface NodeWillRunHandler<N extends LocalNode<any, any>>
-            extends EventHandler {
-            (
-                this: N['surfaceNode'],
-                arg: NodeWillRunArgument,
-            ): void | Promise<void>;
+        export interface NodeWillRunHandler<N extends LocalNode<any, any>> extends EventHandler {
+            (this: N['surfaceNode'], arg: NodeWillRunArgument): void | Promise<void>;
         }
 
         export interface NodeDidRunArgument {
             data: any;
             controlInfo: ControlInfo;
         }
-        export interface NodeDidRunHandler<N extends LocalNode<any, any>>
-            extends EventHandler {
-            (
-                this: N['surfaceNode'],
-                arg: NodeDidRunArgument,
-            ): void | Promise<void>;
+        export interface NodeDidRunHandler<N extends LocalNode<any, any>> extends EventHandler {
+            (this: N['surfaceNode'], arg: NodeDidRunArgument): void | Promise<void>;
         }
 
-        export interface NodeThrowErrorHandler<N extends LocalNode<any, any>>
-            extends EventHandler {
-            (this: N['surfaceNode'], fromChild: boolean, nodeError: NodeError):
-                | void
-                | boolean;
+        export interface NodeThrowErrorHandler<N extends LocalNode<any, any>> extends EventHandler {
+            (this: N['surfaceNode'], fromChild: boolean, nodeError: NodeError): void | boolean;
         }
 
         export const enum CorePortsStateChangeAction {
@@ -338,14 +312,9 @@ export namespace Node {
             ChangeOuterLinkNum,
             ChangeInnerLinkNum,
         }
-        export interface NodePortsStateChangeHandler<
-            N extends LocalNode<any, any>
-        > extends EventHandler {
-            (
-                this: N['surfaceNode'],
-                portName: string,
-                action: NodePortsStateChangeAction,
-            ): void;
+        export interface NodePortsStateChangeHandler<N extends LocalNode<any, any>>
+            extends EventHandler {
+            (this: N['surfaceNode'], portName: string, action: NodePortsStateChangeAction): void;
         }
     }
 }

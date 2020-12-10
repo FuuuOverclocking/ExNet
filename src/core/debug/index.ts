@@ -1,9 +1,4 @@
-import {
-    LogLevel,
-    LogService,
-    LoggableObject,
-    MessageWithNodeAndComponent,
-} from './types';
+import { LogLevel, LogService, LoggableObject, MessageWithNodeAndComponent } from './types';
 export { LogLevel, LogService, LoggableObject, MessageWithNodeAndComponent };
 import { CLILogService } from './cli-log-service';
 import type { Node, NodeCore, SubnetCore } from 'core/types';

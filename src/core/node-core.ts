@@ -27,10 +27,7 @@ export class NodeCore<S, P extends object> extends EventEmitter<
         this.shells.add(shell);
     }
 
-    public setCorePortsState(
-        portName: keyof P,
-        direction: Port.Direction | undefined,
-    ): void {
+    public setCorePortsState(portName: keyof P, direction: Port.Direction | undefined): void {
         const { corePortsState } = this;
 
         if (!corePortsState[portName]) {

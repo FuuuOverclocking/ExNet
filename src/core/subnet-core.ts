@@ -5,9 +5,7 @@ import { LocalDomain } from './local-domain';
 import { Net } from './net';
 import { ExLocalPortSet, LocalPortSet } from './local-port-set';
 
-export class SubnetCore<S, P extends object> extends EventEmitter<
-    Node.SubnetEvents<Subnet<S, P>>
-> {
+export class SubnetCore<S, P extends object> extends EventEmitter<Node.SubnetEvents<Subnet<S, P>>> {
     public readonly type!: ElementType.SubnetCore; // defined on prototype
     public readonly domain!: LocalDomain; // defined on prototype
     public brand!: string; // defined on prototype
@@ -86,10 +84,7 @@ export class SubnetCore<S, P extends object> extends EventEmitter<
             );
             return;
         }
-        if (
-            innerLinkNum !== void 0 &&
-            innerLinkNum !== portState.innerLinkNum
-        ) {
+        if (innerLinkNum !== void 0 && innerLinkNum !== portState.innerLinkNum) {
             portState.innerLinkNum = innerLinkNum;
             this.emit(
                 'corePortsStateChange',

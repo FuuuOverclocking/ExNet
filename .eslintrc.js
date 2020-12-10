@@ -16,11 +16,7 @@ module.exports = {
                 ecmaVersion: 2017,
                 sourceType: 'script',
             },
-            extends: [
-                'eslint:recommended',
-                'prettier',
-                'prettier/@typescript-eslint',
-            ],
+            extends: ['eslint:recommended', 'prettier', 'prettier/@typescript-eslint'],
         },
         {
             files: 'rollup.*.js',
@@ -28,11 +24,7 @@ module.exports = {
                 ecmaVersion: 2017,
                 sourceType: 'module',
             },
-            extends: [
-                'eslint:recommended',
-                'prettier',
-                'prettier/@typescript-eslint',
-            ],
+            extends: ['eslint:recommended', 'prettier', 'prettier/@typescript-eslint'],
         },
         {
             files: 'src/**/*.ts',
@@ -89,7 +81,7 @@ module.exports = {
                 '@typescript-eslint/no-unused-vars': error,
                 '@typescript-eslint/restrict-template-expressions': off,
                 curly: [error, 'multi-line'],
-                'max-len': [error, { code: 95 }],
+                'max-len': [error, { code: 110 }],
                 'no-constant-condition': ['error', { checkLoops: false }],
             },
         },

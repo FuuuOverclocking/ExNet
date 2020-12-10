@@ -34,10 +34,7 @@ export class Asap {
          * if `result` is not undefined, then it must be a `Promise`
          * in `pending` or `resolved` state, never in `rejected` state.
          */
-        public result:
-            | void
-            | Asap.cancelToken
-            | Promise<void | Asap.cancelToken>,
+        public result: void | Asap.cancelToken | Promise<void | Asap.cancelToken>,
     ) {}
 
     public thenTryCatch(
@@ -75,9 +72,7 @@ export class Asap {
         return this;
     }
 
-    public static execFunctions<
-        F extends (...args: any[]) => void | Promise<void>
-    >(
+    public static execFunctions<F extends (...args: any[]) => void | Promise<void>>(
         functions: F[],
         thisArg: ThisParameterType<F>,
         ...args: Parameters<F>
@@ -88,18 +83,12 @@ export class Asap {
             if (It.isPromise(result)) {
                 return functions
                     .slice(i + 1)
-                    .reduce(
-                        (promise, fn) =>
-                            promise.then(() => fn.apply(thisArg, args)),
-                        result,
-                    );
+                    .reduce((promise, fn) => promise.then(() => fn.apply(thisArg, args)), result);
             }
         }
     }
 
-    public static execFunctionsAndCheck<
-        F extends (...args: any[]) => void | Promise<void>
-    >(
+    public static execFunctionsAndCheck<F extends (...args: any[]) => void | Promise<void>>(
         check: () => boolean,
         functions: readonly F[],
         thisArg: ThisParameterType<F>,

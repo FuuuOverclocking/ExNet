@@ -14,10 +14,7 @@ export class LocalPortSet<P extends object> {
         private readonly node?: LocalNode<any, P>,
     ) {}
 
-    public get<K extends keyof P>(
-        portName: K,
-        direction?: Port.Direction,
-    ): LocalPort<P[K]> {
+    public get<K extends keyof P>(portName: K, direction?: Port.Direction): LocalPort<P[K]> {
         if (this.side === Port.Side.Outer && portName === '$IE') {
             log.withNC.error(
                 'A node cannot have an outer port named "$IE".',
@@ -36,12 +33,6 @@ export class LocalPortSet<P extends object> {
         }
 
         direction ??= Port.Direction.Unknown;
-        return new LocalPort<P[K]>(
-            portName as string,
-            this.core,
-            this.node,
-            this.side,
-            direction,
-        );
+        return new LocalPort<P[K]>(portName as string, this.core, this.node, this.side, direction);
     }
 }
